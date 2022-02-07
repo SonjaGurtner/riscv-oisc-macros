@@ -10,13 +10,19 @@ sw   a6, 0(t0)
 .endm
 
 .macro MYADD, rd, r1, r2
-#stack platz machen, t3 rein
-# sw t3, 0x0(sp) was wenn da schon was steht?     #t3 zwischenspeichern
-sub t3, x0, r2
-sub rd, r1,t3
-# lw t3, 0x0(sp)
+sw t3, 0x0(sp)              #save t3
+sub t3, x0, \r2             #t3 = -a0
+sub \rd, \r1, t3            #rd = r1 -(-a0)
+lw t3, 0x0(sp)              #restore t3
 .endm
 
+.macro MYADDI, rd, r1, imm
+sw t3, 0x0(sp)
+li t3, \imm
+sub t3, x0, t3
+sub \rd, \r1, t3
+lw t3, 0x0(sp)
+.endm
 
 # program entry-point
 _start:
@@ -27,8 +33,8 @@ li a1,100
 li a2,0
 loop:
 bgt a0,a1,end
-add a2,a2,a0
-addi a0,a0,1
+MYADD a2,a2,a0
+MYADDI a0,a0,1
 j loop
 end:
 
