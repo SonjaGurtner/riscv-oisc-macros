@@ -32,6 +32,29 @@ slli_end:
 #restore t5
 .endm
 
+.macro MYSSL, rd, r1, r2
+# shift by 1 means * 2 (=add to itself)
+#save t3, used for storing -rd for the multiplication
+#save t4, t4 will be loop counter
+#save t5, loop variable i
+add t4, x0, \r2
+addi t5, x0, 0              # loop variable i
+add \rd, x0, \r1            # rd = r1
+sub t3, x0, \rd             #t3 = -rd
+
+slli_loop:
+beq t5, t4, slli_end        #loop end condition
+sub \rd, \rd, t3            #rd - (-rd) => rd*2
+sub t3, x0, \rd             #t3 = -rd
+addi t5, t5, 1              #i++
+j slli_loop
+
+slli_end:
+#restore t3
+#restore t4
+#restore t5
+.endm
+
 
 # program entry-point
 _start:
@@ -53,6 +76,7 @@ addi t2, t2, 1	    	#t2++
 j loopstart	        
 
 end:
-MYSSLI s4, a1, 1          # shift by 1 => ai * 2, for testing purposes
+addi a2, x0, 1
+MYSSL s4, a1, a2        # shift by 1 => ai * 2, for testing purposes
 # call exit (SYS_EXIT=93) with exit code 0 (argument in a0)
 SYS_EXIT 0
