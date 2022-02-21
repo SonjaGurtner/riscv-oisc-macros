@@ -10,25 +10,25 @@ sw   a6, 0(t0)
 .endm
 
 .macro MYADD, rd, r1, r2
-sw t3, 0x0(sp)              #save t3
+sw t3, -4(sp)               #save t3
 sub t3, x0, \r2             #t3 = -a0
 sub \rd, \r1, t3            #rd = r1 -(-a0)
-lw t3, 0x0(sp)              #restore t3
+lw t3, -4(sp)               #restore t3
 .endm
 
 .macro MYADDI, rd, r1, imm
-sw t3, 0x0(sp)
-li t3, \imm
-sub t3, x0, t3
-sub \rd, \r1, t3
-lw t3, 0x0(sp)
+sw t3, -4(sp)              
+li t3, \imm                 #t3 = imm
+sub t3, x0, t3              #t3 = -imm
+sub \rd, \r1, t3            #rd = r1-(-imm)
+lw t3, -4(sp)
 .endm
 
 .macro SUBI rd, r1, imm
-sw t3, 0x0(sp)
-li t3, \imm
-sub rd, r1, t3
-lw t3, 0x0(sp)
+sw t3, -4(sp)               
+li t3, \imm                 #t3 = imm
+sub rd, r1, t3              #rd = r1 -(-imm)
+lw t3, -4(sp)
 .endm
 
 # program entry-point

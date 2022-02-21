@@ -10,13 +10,14 @@ sw   a6, 0(t0)
 .endm
 
 .macro MYSSLI, rd, r1, imm
+# shift amount should be positive, negativ leads to overflow?
 # shift by 1 means * 2 (=add to itself)
-#save t3, used for storing -rd for the multiplication
-#save t4, t4 will be loop counter
-#save t5, loop variable i
-addi t4, x0, \imm
-addi t5, x0, 0              # loop variable i
-add \rd, x0, \r1            # rd = r1
+sw t3, -4(sp)               #save registers
+sw t4, -8(sp)
+sw t5, -12(sp)
+addi t4, x0, \imm           #t4 = exit condition
+addi t5, x0, 0              #loop variable i
+add \rd, x0, \r1            #rd = r1
 sub t3, x0, \rd             #t3 = -rd
 
 slli_loop:
@@ -27,19 +28,18 @@ addi t5, t5, 1              #i++
 j slli_loop
 
 slli_end:
-#restore t3
-#restore t4
-#restore t5
+lw t5, -12(sp)              #restore registers
+lw t4, -8(sp)
+lw t3, -4(sp)
 .endm
 
 .macro MYSSL, rd, r1, r2
-# shift by 1 means * 2 (=add to itself)
-#save t3, used for storing -rd for the multiplication
-#save t4, t4 will be loop counter
-#save t5, loop variable i
+sw t3, -4(sp)               #save registers
+sw t4, -8(sp)
+sw t5, -12(sp)
 add t4, x0, \r2
-addi t5, x0, 0              # loop variable i
-add \rd, x0, \r1            # rd = r1
+addi t5, x0, 0              #loop variable i
+add \rd, x0, \r1            #rd = r1
 sub t3, x0, \rd             #t3 = -rd
 
 slli_loop:
@@ -50,9 +50,9 @@ addi t5, t5, 1              #i++
 j slli_loop
 
 slli_end:
-#restore t3
-#restore t4
-#restore t5
+lw t5, -12(sp)              #restore registers
+lw t4, -8(sp)
+lw t3, -4(sp)
 .endm
 
 
@@ -75,6 +75,6 @@ j loopstart
 
 end:
 addi a2, x0, 1
-MYSSL s4, a1, a2        # shift by 1 => ai * 2, for testing purposes
+MYSSl s4, a1, a2        # shift by 1 => ai * 2, for testing purposes
 # call exit (SYS_EXIT=93) with exit code 0 (argument in a0)
 SYS_EXIT 0

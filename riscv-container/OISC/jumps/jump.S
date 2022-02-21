@@ -12,28 +12,20 @@ sw   a6, 0(t0)
 .endm
 
 .macro MYJAL, rd, imm
-sw t3, 0x0(sp)              #save t3
+sw t3, -4(sp)               #save t3
 auipc t3, 0                 #t3 = pc
 sub t3, x0, t3              #t3 = -pc
-sub \rd, x0, t3             #rd=pc
-addi t3, x0, 4              #t3=4
-sub t3, x0, t3              #t3 = -t3 (=-4)
-sub \rd, \rd,t3             #rd=pc+4
-#sub pc, pc, t4             #pc+imm
-lw t3, 0x0(sp)              # restore t3
-beq x0, x0, \imm
-.endm
-
-.macro MYJALR rd, r1
-#rd = PC+4
-#pc+r1
+sub \rd, x0, t3             #rd = pc
+addi t3, x0, 4              #t3 = 4
+sub t3, x0, t3              #t3 = -4
+sub \rd, \rd,t3             #rd = pc + 4
+lw t3, -4(sp)               #restore t3
+beq x0, x0, \imm            #jump to label
 .endm
 
 
 # program entry-point
 _start:
-    # a0 = destination
-    # a1 = source
     addi    sp, sp, -16
     sw      ra, 0(sp)
     la      a1, str
