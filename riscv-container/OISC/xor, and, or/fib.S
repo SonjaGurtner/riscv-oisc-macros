@@ -68,8 +68,6 @@ addi t0, x0, 2		    #loop limit
 loopstart: 				
 beq t2, t0, end	        #if t2 <= 0 exit loop
 add  a1, s2, s3	    	#a1 = fib
-#mv s2, s3
-#mv s3, a1
 ori s2, s3, 0       	#copy value
 xori s3, a1, 0	    	#keep value		
 addi t2, t2, 1	    	#t2++

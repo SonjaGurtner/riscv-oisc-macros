@@ -24,6 +24,13 @@ sub \rd, \r1, t3
 lw t3, 0x0(sp)
 .endm
 
+.macro SUBI rd, r1, imm
+sw t3, 0x0(sp)
+li t3, \imm
+sub rd, r1, t3
+lw t3, 0x0(sp)
+.endm
+
 # program entry-point
 _start:
 
