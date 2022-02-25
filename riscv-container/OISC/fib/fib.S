@@ -16,6 +16,17 @@ sub \rd, \r1, t3            #rd = r1 -(-imm)
 lw t3, -4(sp)
 .endm
 
+.macro MYSLT rd, r1, r2
+sub \rd, \r1, \r2           #rd = r1 - r2
+blt \rd, x0, 1f             #if rd < 0 (r1 < r2)
+sub \rd, x0, x0             #r1 > r2, rd = 0
+j 2f
+1:
+SUBI \rd, x0, 1             #rd = -1
+sub \rd, x0, \rd            #rd = 1
+2:                          #end
+.endm
+
 .macro MYLUI rd, imm
 #labels have to be unique so cannot use slli_loop if called multiple times
 #need to use 1 and then 1b or 1f which makes it unique
@@ -69,7 +80,7 @@ add \rd, x0, \r1            #rd = r1
 sub t3, x0, \rd             #t3 = -rd
 
 1:
-beq t5, t4, 2f         #loop end condition
+beq t5, t4, 2f              #loop end condition
 sub \rd, \rd, t3            #rd - (-rd) => rd*2
 sub t3, x0, \rd             #t3 = -rd
 addi t5, t5, 1              #i++
@@ -120,5 +131,6 @@ end:
 addi a2, x0, 1
 MYSLLI s4, a1, 1
 MYLUI s5, 4
+MYSLT s6, s3, s4
 # call exit (SYS_EXIT=93) with exit code 0 (argument in a0)
 SYS_EXIT 0
