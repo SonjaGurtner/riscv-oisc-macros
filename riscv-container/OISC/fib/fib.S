@@ -9,18 +9,27 @@ csrr a6, mhartid
 sw   a6, 0(t0)
 .endm
 
+.macro SUBI rd, r1, imm
+sw t3, -4(sp)               
+li t3, \imm                 #t3 = imm
+sub \rd, \r1, t3            #rd = r1 -(-imm)
+lw t3, -4(sp)
+.endm
+
 .macro MYLUI rd, imm
 #labels have to be unique so cannot use slli_loop if called multiple times
 #need to use 1 and then 1b or 1f which makes it unique
 #lui is shift left by 12
-addi \rd, x0, \imm
+SUBI \rd, x0, \imm          #rd = -imm
+sub \rd, x0, \rd            #rd = imm
 MYSLLI \rd, \rd, 12
 .endm
 
 .macro MYSLLI2, rd, r1, imm
 #alternative version, just write imm to register and cal MYSLL
 sw t6, -16(sp)
-addi t6, x0, \imm
+SUBI t6, x0, \imm           #t6 = -imm
+sub t6, x0, t6              #t6 = imm
 MYSLL \rd, \r1, t6
 lw t6, -16(sp)
 .endm

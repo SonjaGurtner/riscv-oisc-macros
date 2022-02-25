@@ -27,7 +27,7 @@ lw t3, -4(sp)
 .macro SUBI rd, r1, imm
 sw t3, -4(sp)               
 li t3, \imm                 #t3 = imm
-sub rd, r1, t3              #rd = r1 -(-imm)
+sub \rd, \r1, t3              #rd = r1 -(-imm)
 lw t3, -4(sp)
 .endm
 
