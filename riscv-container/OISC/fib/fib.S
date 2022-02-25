@@ -10,6 +10,8 @@ sw   a6, 0(t0)
 .endm
 
 .macro MYLUI rd, imm
+#labels have to be unique so cannot use slli_loop if called multiple times
+#need to use 1 and then 1b or 1f which makes it unique
 #lui is shift left by 12
 addi \rd, x0, \imm
 MYSLLI \rd, \rd, 12
@@ -35,14 +37,14 @@ addi t5, x0, 0              #loop variable i
 add \rd, x0, \r1            #rd = r1
 sub t3, x0, \rd             #t3 = -rd
 
-slli_loop:
-beq t5, t4, slli_end        #loop end condition
+1:
+beq t5, t4, 2f              #loop end condition
 sub \rd, \rd, t3            #rd - (-rd) => rd*2
 sub t3, x0, \rd             #t3 = -rd
 addi t5, t5, 1              #i++
-j slli_loop
+j 1b
 
-slli_end:
+2:
 lw t5, -12(sp)              #restore registers
 lw t4, -8(sp)
 lw t3, -4(sp)
@@ -57,14 +59,14 @@ addi t5, x0, 0              #loop variable i
 add \rd, x0, \r1            #rd = r1
 sub t3, x0, \rd             #t3 = -rd
 
-sll_loop:
-beq t5, t4, sll_end         #loop end condition
+1:
+beq t5, t4, 2f         #loop end condition
 sub \rd, \rd, t3            #rd - (-rd) => rd*2
 sub t3, x0, \rd             #t3 = -rd
 addi t5, t5, 1              #i++
-j sll_loop
+j 1b
 
-sll_end:
+2:
 lw t5, -12(sp)              #restore registers
 lw t4, -8(sp)
 lw t3, -4(sp)
@@ -107,7 +109,7 @@ j loopstart
 
 end:
 addi a2, x0, 1
-slli s4, a1, 1
+MYSLLI s4, a1, 1
 MYLUI s5, 4
 # call exit (SYS_EXIT=93) with exit code 0 (argument in a0)
 SYS_EXIT 0
