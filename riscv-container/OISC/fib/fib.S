@@ -9,8 +9,23 @@ csrr a6, mhartid
 sw   a6, 0(t0)
 .endm
 
-.macro MYSSLI, rd, r1, imm
-# shift amount should be positive, negativ leads to overflow?
+.macro MYLUI rd, imm
+#lui is shift left by 12
+addi \rd, x0, \imm
+MYSLLI \rd, \rd, 12
+.endm
+
+.macro MYSLLI2, rd, r1, imm
+#alternative version, just write imm to register and cal MYSLL
+sw t6, -16(sp)
+addi t6, x0, \imm
+MYSLL \rd, \r1, t6
+lw t6, -16(sp)
+.endm
+
+.macro MYSLLI, rd, r1, imm
+# shift amount should be positive, negativ leads to infinite loop in this macro
+# and overflow or smth in real sll
 # shift by 1 means * 2 (=add to itself)
 sw t3, -4(sp)               #save registers
 sw t4, -8(sp)
@@ -33,28 +48,45 @@ lw t4, -8(sp)
 lw t3, -4(sp)
 .endm
 
-.macro MYSSL, rd, r1, r2
+.macro MYSLL, rd, r1, r2
 sw t3, -4(sp)               #save registers
 sw t4, -8(sp)
 sw t5, -12(sp)
-add t4, x0, \r2
+add t4, x0, \r2             #loop boundary
 addi t5, x0, 0              #loop variable i
 add \rd, x0, \r1            #rd = r1
 sub t3, x0, \rd             #t3 = -rd
 
-slli_loop:
-beq t5, t4, slli_end        #loop end condition
+sll_loop:
+beq t5, t4, sll_end         #loop end condition
 sub \rd, \rd, t3            #rd - (-rd) => rd*2
 sub t3, x0, \rd             #t3 = -rd
 addi t5, t5, 1              #i++
-j slli_loop
+j sll_loop
 
-slli_end:
+sll_end:
 lw t5, -12(sp)              #restore registers
 lw t4, -8(sp)
 lw t3, -4(sp)
 .endm
 
+.macro MYXOR
+.endm
+
+.macro MYOR
+.endm
+
+.macro MYAND
+.endm
+
+.macro MYXORI
+.endm
+
+.macro MYORI
+.endm
+
+.macro MYANDI
+.endm
 
 # program entry-point
 _start:
@@ -75,6 +107,7 @@ j loopstart
 
 end:
 addi a2, x0, 1
-MYSSl s4, a1, a2        # shift by 1 => ai * 2, for testing purposes
+slli s4, a1, 1
+MYLUI s5, 4
 # call exit (SYS_EXIT=93) with exit code 0 (argument in a0)
 SYS_EXIT 0

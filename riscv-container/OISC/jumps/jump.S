@@ -11,6 +11,7 @@ csrr a6, mhartid
 sw   a6, 0(t0)
 .endm
 
+#only replace JAL command as we need to keep jalr to manipulate pc directly
 .macro MYJAL, rd, imm
 sw t3, -4(sp)               #save t3
 auipc t3, 0                 #t3 = pc
