@@ -10,10 +10,10 @@ sw   a6, 0(t0)
 .endm
 
 .macro SUBI rd, r1, imm
-sw t3, -4(sp)               
+sw t3, -16(sp)               
 li t3, \imm                 #t3 = imm
 sub \rd, \r1, t3            #rd = r1 -(-imm)
-lw t3, -4(sp)
+lw t3, -16(sp)
 .endm
 
 .macro MYSLT rd, r1, r2
@@ -27,6 +27,78 @@ sub \rd, x0, \rd            #rd = 1
 2:                          #end
 .endm
 
+.macro MYSLTI rd, r1, imm
+SUBI \rd, \r1, \imm         #rd = r1 - imm
+blt \rd, x0, 1f             #if rd < 0 (r1 < r2)
+sub \rd, x0, x0             #r1 > r2, rd = 0
+j 2f
+1:
+SUBI \rd, x0, 1             #rd = -1
+sub \rd, x0, \rd            #rd = 1
+2:                          #end
+.endm
+
+.macro MYSLTI2 rd, r1, imm
+sw t3, -4(sp)
+addi t3, x0, \imm
+MYSLT \rd, \r1, t3
+lw t3, -4(sp)
+.endm
+
+.macro MYSLTU rd, r1, r2
+sw t3, -20(sp)      
+sw t4, -24(sp)          
+add t3, x0, \r1             #t3 = r1
+add t4, x0, \r2             #t4 = r2
+srli t3, t3, 1              #eliminate LSB and get leading 0
+srli t4, t4, 1
+beq t3, t4, 1f              #compare lower 31 bits
+j 2f                        #else just slt
+1:
+add t3, x0, \r1
+add t4, x0, \r2
+slli t3, t3, 1              #shift left and right to eliminate MSB
+srli t3, t3, 1
+slli t4, t4, 1
+srli t4, t4, 1
+2:
+slt \rd, t3, t4
+lw t4, -24(sp)
+lw t3, -20(sp)
+.endm
+
+.macro MYSLTIU rd, r1, imm
+#first compare the upper 31 bits (srl to eliminate LSB and have leading 0
+#when they are != then normal SLT, when equal compare lower 31 bits
+#by shifting once left and right to keep lower 31 and eliminate MSB
+sw t3, -20(sp)      
+sw t4, -24(sp)          
+add t3, x0, \r1             #t3 = r1
+addi t4, x0, \imm           #t4 = imm
+srli t3, t3, 1              #eliminate LSB and get leading 0
+srli t4, t4, 1
+beq t3, t4, 1f              #compare lower 31 bits
+j 2f                        #else just slt
+1:
+add t3, x0, \r1
+addi t4, x0, \imm
+slli t3, t3, 1              #shift left and right to eliminate MSB
+srli t3, t3, 1
+slli t4, t4, 1
+srli t4, t4, 1
+2:
+slt \rd, t3, t4
+lw t4, -24(sp)
+lw t3, -20(sp)
+.endm
+
+.macro MYSLTIU2 rd, r1, imm
+sw t5, -28(sp)
+addi t5, x0, \imm
+MYSLTIU \rd, \r1, t5
+lw t5, -28(sp)
+.endm
+
 .macro MYLUI rd, imm
 #labels have to be unique so cannot use slli_loop if called multiple times
 #need to use 1 and then 1b or 1f which makes it unique
@@ -38,11 +110,11 @@ MYSLLI \rd, \rd, 12
 
 .macro MYSLLI2, rd, r1, imm
 #alternative version, just write imm to register and cal MYSLL
-sw t6, -16(sp)
+sw t6, -20(sp)
 SUBI t6, x0, \imm           #t6 = -imm
 sub t6, x0, t6              #t6 = imm
 MYSLL \rd, \r1, t6
-lw t6, -16(sp)
+lw t6, -20(sp)
 .endm
 
 .macro MYSLLI, rd, r1, imm
@@ -121,7 +193,7 @@ addi t0, x0, 2		    #loop limit
 
 loopstart: 				
 beq t2, t0, end	        #if t2 <= 0 exit loop
-add  a1, s2, s3	    	#a1 = fib
+add a1, s2, s3	    	#a1 = fib
 ori s2, s3, 0       	#copy value
 xori s3, a1, 0	    	#keep value		
 addi t2, t2, 1	    	#t2++
@@ -130,7 +202,7 @@ j loopstart
 end:
 addi a2, x0, 1
 MYSLLI s4, a1, 1
-MYLUI s5, 4
-MYSLT s6, s3, s4
+#MYLUI s5, 4
+#sltiu s6, s4, -13        # 4U < -13U
 # call exit (SYS_EXIT=93) with exit code 0 (argument in a0)
 SYS_EXIT 0
