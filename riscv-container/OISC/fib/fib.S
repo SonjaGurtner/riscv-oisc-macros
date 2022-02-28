@@ -164,22 +164,237 @@ lw t4, -8(sp)
 lw t3, -4(sp)
 .endm
 
-.macro MYXOR
+.macro MYOR rd, r1, r2
+#iterate through the numbers, each time extract MSBs and compare them
+sw t3, -20(sp)              #shifting r1
+sw t4, -24(sp)              #shifting r2
+sw t5, -28(sp)              #msb eliminated r1 for comparison, also contains MSB sum
+sw t6, -32(sp)              #msb eliminated r2 for comparison
+sw t0, -36(sp)              #1, for comparing MSBs
+sw t1, -40(sp)              #loop variable i
+sw t2, -44(sp)              #loop limit = 32   
+
+#check special cases, BEFORE overwriting temp registers (one of them may be r1 or r2)
+beq \r1, x0, 7f             #r1 = 0, return r2
+beq \r2, x0, 8f             #r2 = 0, return r1
+
+add t3, x0, \r1
+add t4, x0, \r2
+addi t0, x0, 1
+addi t1, x0, 1
+addi t2, x0, 32
+add \rd, x0, x0             #clean rd for result
+
+1:
+bgt t1, t2, 6f              #i=33, loop limit reached, compared each bit
+slli \rd, \rd, 1            #shift rd left by one
+slli t5, t3, 1              
+srli t5, t5, 1              #MSB = 0
+slli t6, t4, 1              
+srli t6, t6, 1              #MSB = 0
+sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
+bne t5, x0, 2f
+10:
+sub t6, t4, t6              #extracted MSB of r2
+bne t6, x0, 3f
+11:
+add t5, t5, t6              #MSB of r1 + MSB of r2
+bgt t5, x0, 4f              #sum has to be at least 1 (0|1; 1|1)
+j 5f                        #if not the case (0|0) shift to left to add 0
+
+2:
+addi t5, x0, 1
+j 10b
+
+3:
+addi t6, x0, 1
+j 11b
+
+4:
+addi \rd, \rd, 1            #rd+=1
+
+5:
+addi t1, t1, 1              #i++
+slli t3, t3, 1              #shift r1 by 1
+slli t4, t4, 1              #shift r2 by 1
+j 1b                        #loop again
+
+7:                          #special case r1=0, return r2
+add \rd, x0, \r2
+j 6f
+
+8:                          #special case r2=0, return r1
+add \rd, x0, \r1
+j 6f
+
+6:                          #end, estore registers
+lw t2, -44(sp)              
+lw t1, -40(sp)             
+lw t0, -36(sp)
+lw t6, -32(sp)
+lw t5, -28(sp)
+lw t4, -24(sp)
+lw t3, -20(sp)
 .endm
 
-.macro MYOR
+.macro MYXOR rd, r1, r2
+sw t3, -20(sp)              #shifting r1
+sw t4, -24(sp)              #shifting r2
+sw t5, -28(sp)              #msb eliminated r1 for comparison, also contains MSB sum
+sw t6, -32(sp)              #msb eliminated r2 for comparison
+sw t0, -36(sp)              #1, for comparing MSBs
+sw t1, -40(sp)              #loop variable i
+sw t2, -44(sp)              #loop limit = 32   
+
+beq \r1, x0, 7f             #r1 = 0, return r2
+beq \r2, x0, 8f             #r2 = 0, return r1
+
+add t3, x0, \r1
+add t4, x0, \r2
+addi t0, x0, 1
+addi t1, x0, 1
+addi t2, x0, 32
+add \rd, x0, x0             #clean rd for result
+
+1:
+bgt t1, t2, 6f              #i=33, loop limit reached, compared each bit
+slli \rd, \rd, 1            #shift rd left by one
+slli t5, t3, 1              
+srli t5, t5, 1              #MSB = 0
+slli t6, t4, 1              
+srli t6, t6, 1              #MSB = 0
+sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
+bne t5, x0, 2f
+10:
+sub t6, t4, t6              #extracted MSB of r2
+bne t6, x0, 3f
+11:
+add t5, t5, t6              #MSB of r1 + MSB of r2
+beq t5, x0, 4f              #sum has to be exactly 1 (0|1; 1|0)
+j 5f                        #if not the case (0|0, (1|1) shift to left to add 0
+
+2:
+addi t5, x0, 1
+j 10b
+
+3:
+addi t6, x0, 1
+j 11b
+
+4:
+addi \rd, \rd, 1            #rd+=1
+
+5:
+addi t1, t1, 1              #i++
+slli t3, t3, 1              #shift r1 by 1
+slli t4, t4, 1              #shift r2 by 1
+j 1b                        #loop again
+
+7:                          #special case r1=0, return r2
+add \rd, x0, \r2
+j 6f
+
+8:                          #special case r2=0, return r1
+add \rd, x0, \r1
+j 6f
+
+6:                          #end, estore registers
+lw t2, -44(sp)              
+lw t1, -40(sp)             
+lw t0, -36(sp)
+lw t6, -32(sp)
+lw t5, -28(sp)
+lw t4, -24(sp)
+lw t3, -20(sp)
 .endm
 
-.macro MYAND
+.macro MYAND rd, r1, r2
+sw t3, -20(sp)              #shifting r1
+sw t4, -24(sp)              #shifting r2
+sw t5, -28(sp)              #msb eliminated r1 for comparison, also contains MSB sum
+sw t6, -32(sp)              #msb eliminated r2 for comparison
+sw t0, -36(sp)              #1, for comparing MSBs
+sw t1, -40(sp)              #loop variable i
+sw t2, -44(sp)              #loop limit = 32   
+
+#check special cases, BEFORE overwriting temp registers (one of them may be r1 or r2)
+beq \r1, x0, 7f             #r1 or r2 = 0, return 0
+beq \r2, x0, 7f             
+
+add t3, x0, \r1
+add t4, x0, \r2
+addi t0, x0, 1
+addi t1, x0, 1
+addi t2, x0, 32
+add \rd, x0, x0             #clean rd for result
+
+1:
+bgt t1, t2, 6f              #i=33, loop limit reached, compared each bit
+slli \rd, \rd, 1            #shift rd left by one
+slli t5, t3, 1              
+srli t5, t5, 1              #MSB = 0
+slli t6, t4, 1              
+srli t6, t6, 1              #MSB = 0
+sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
+bne t5, x0, 2f
+10:
+sub t6, t4, t6              #extracted MSB of r2
+bne t6, x0, 3f
+11:
+add t5, t5, t6              #MSB of r1 + MSB of r2
+bgt t5, x0, 4f              #sum has to be at least 1 (0|1; 1|1)
+j 5f                        #if not the case (0|0) shift to left to add 0
+
+2:
+addi t5, x0, 1
+j 10b
+
+3:
+addi t6, x0, 1
+j 11b
+
+4:
+addi \rd, \rd, 1            #rd+=1
+
+5:
+addi t1, t1, 1              #i++
+slli t3, t3, 1              #shift r1 by 1
+slli t4, t4, 1              #shift r2 by 1
+j 1b                        #loop again
+
+7:                         
+add \rd, x0, x0
+j 6f
+
+6:                          #end, estore registers
+lw t2, -44(sp)              
+lw t1, -40(sp)             
+lw t0, -36(sp)
+lw t6, -32(sp)
+lw t5, -28(sp)
+lw t4, -24(sp)
+lw t3, -20(sp)
 .endm
 
-.macro MYXORI
+.macro MYXORI rd, r1, imm
+sw t0, -48(sp)
+addi t0, x0, \imm
+MYXOR \rd, \r1, t0
+lw t0, -48(sp)
 .endm
 
-.macro MYORI
+.macro MYORI rd, r1, imm
+sw t0, -48(sp)
+addi t0, x0, \imm
+MYOR \rd, \r1, t0
+lw t0, -48(sp)
 .endm
 
-.macro MYANDI
+.macro MYANDI rd, r1, imm
+sw t0, -48(sp)
+addi t0, x0, \imm
+MYAND \rd, \r1, t0
+lw t0, -48(sp)
 .endm
 
 # program entry-point
@@ -189,20 +404,23 @@ addi s2, x0, 0		    #fib1 = 0
 addi s3, x0, 1          #fib2 = 1
 addi a1, x0, 0          #return val
 addi t2, x0, 0		    #loop counter
-addi t0, x0, 2		    #loop limit
+addi t0, x0, 3		    #loop limit
 
 loopstart: 				
 beq t2, t0, end	        #if t2 <= 0 exit loop
 add a1, s2, s3	    	#a1 = fib
-ori s2, s3, 0       	#copy value
+#ori s2, s3, 0       	#copy value
+or s2, s3, x0
 xori s3, a1, 0	    	#keep value		
 addi t2, t2, 1	    	#t2++
 j loopstart	        
 
 end:
 addi a2, x0, 1
-MYSLLI s4, a1, 1
+#MYSLLI s4, a1, 1
 #MYLUI s5, 4
 #sltiu s6, s4, -13        # 4U < -13U
+addi s9, x0, 500
+MYORI s4, x0, 500
 # call exit (SYS_EXIT=93) with exit code 0 (argument in a0)
 SYS_EXIT 0
