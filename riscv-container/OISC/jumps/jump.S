@@ -24,6 +24,13 @@ lw t3, -4(sp)               #restore t3
 beq x0, x0, \imm            #jump to label
 .endm
 
+.macro BGT r1, r2, imm
+beq \r1, \r2, 1f
+blt \r1, \r2, 1f
+j \imm
+1:
+.endm
+
 
 # program entry-point
 _start:
