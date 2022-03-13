@@ -397,13 +397,6 @@ MYAND \rd, \r1, t0
 lw t0, -48(sp)
 .endm
 
-.macro MYLW rd, imm, r1
-#rd = imm(r1) --> MYLW s1, 0, s2 = lw s1, 0(s2)
-#A word is 4 bytes long, so the valid word-aligned addresses are divisible by 4
-#storing a byte does not require a word-aligned address.
-lw \rd, \imm(\r1)
-.endm
-
 # program entry-point
 _start:
 
@@ -429,9 +422,5 @@ addi a2, x0, 1
 #sltiu s6, s4, -13      # 4U < -13U
 #addi s9, x0, 500
 #MYORI s4, x0, 500
-addi s3, x0, 140
-sw s3, 0(s4)
-lw s5, 0(s4)
-MYLW s6, 0, s4
 # call exit (SYS_EXIT=93) with exit code 0 (argument in a0)
 SYS_EXIT 0
