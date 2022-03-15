@@ -9,34 +9,6 @@ csrr a6, mhartid
 sw   a6, 0(t0)
 .endm
 
-.macro MYADD, rd, r1, r2
-addi sp, sp, -4
-sw t3, 0(sp)                #save t3
-sub t3, x0, \r2             #t3 = -a0
-sub \rd, \r1, t3            #rd = r1 -(-a0)
-lw t3, 0(sp)                #restore t3
-addi sp, sp, 4
-.endm
-
-.macro MYADDI, rd, r1, imm
-addi sp, sp, -4
-sw t3, 0(sp)              
-addi t3, x0, \imm           #t3 = imm
-sub t3, x0, t3              #t3 = -imm
-sub \rd, \r1, t3            #rd = r1-(-imm)
-lw t3, 0(sp)
-addi sp, sp, 4
-.endm
-
-.macro SUBI rd, r1, imm
-addi sp, sp, -4
-sw t3, 0(sp)      
-li t3, \imm                 #t3 = imm
-sub \rd, \r1, t3            #rd = r1 -(-imm)
-lw t3, 0(sp)
-addi sp, sp, 4
-.endm
-
 # program entry-point
 _start:
 
