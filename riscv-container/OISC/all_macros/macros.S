@@ -12,7 +12,7 @@ sw t1, 4(sp)
 sub t1, x0, \r1
 sub t1, x0, t1
 sub t0, x0, \r2             #t0 = -a0
-sub \rd, t1, t0            #rd = r1 -(-a0)
+sub \rd, t1, t0             #rd = r1 -(-a0)
 sw \rd, 8(sp)
 lw t0, 0(sp)
 lw t1, 4(sp)
