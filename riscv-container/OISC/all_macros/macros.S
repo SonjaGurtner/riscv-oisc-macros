@@ -51,15 +51,14 @@ addi sp, sp, 8
 .macro MYJAL, rd, imm
 addi sp, sp, -12
 sw t0, 0(sp)                #save t0
-sw t1, 4(sp)                #will be rd
-auipc t0, 0                 #t0 = pc
-MYADD t1, x0, t0            #rd = pc
+sw t1, 4(sp)                #save t1, will become return value for rd
+auipc t1, 0                 #t1 = pc
 SUBI t0, x0, 4              #t0 = -4
 sub t1, t1, t0              #rd = pc + 4
 sw t1, 8(sp)
-lw t0, 0(sp)                #restore t0
 lw t1, 4(sp)
-lw \rd, 8(sp)
+lw t0, 0(sp)                #restore t0
+lw \rd, 8(sp)               #restore rd
 addi sp, sp, 12
 beq x0, x0, \imm            #jump to label
 .endm
