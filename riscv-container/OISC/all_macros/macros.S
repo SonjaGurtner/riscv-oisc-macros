@@ -143,19 +143,11 @@ MYADDI \rd, x0, 1           #rd = 1
 43:                         #end
 .endm
 
-.macro MYSLTI2 rd, r1, imm
-addi sp, sp, -4
-sw t0, 0(sp)
-MYADDI t0, x0, \imm
-MYSLT \rd, \r1, t0
-lw t0, 0(sp)
-addi sp, sp, 4
-.endm
-
 .macro MYSLTU rd, r1, r2
-addi sp, sp, -8
+addi sp, sp, -16
 sw t0, 0(sp)
 sw t1, 4(sp)
+sw t2, 8(sp)                #will become rd
 MYADD t0, x0, \r1           #t0 = r1
 MYADD t1, x0, \r2           #t1 = r2
 srli t0, t0, 1              #eliminate LSB and get leading 0
@@ -170,19 +162,23 @@ srli t0, t0, 1
 MYSLLI t1, t1, 1
 srli t1, t1, 1
 51:
-MYSLT \rd, t0, t1
+MYSLT t2, t0, t1
+sw t2, 12(sp)               #save rd on stack
+lw t2, 8(sp)
 lw t1, 4(sp)
 lw t0, 0(sp)
-addi sp, sp, 8
+lw \rd, 12(sp)              #restore rd
+addi sp, sp, 16
 .endm
 
 .macro MYSLTIU rd, r1, imm
 #first compare the upper 31 bits (srl to eliminate LSB and have leading 0
 #when they are != then normal SLT, when equal compare lower 31 bits
 #by shifting once left and right to keep lower 31 and eliminate MSB
-addi sp, sp, -8
+addi sp, sp, -16
 sw t0, 0(sp)
 sw t1, 4(sp)
+sw t2, 8(sp)                #will become rd
 MYADD t0, x0, \r1           #t0 = r1
 MYADDI t1, x0, \imm         #t1 = imm
 srli t0, t0, 1              #eliminate LSB and get leading 0
@@ -197,10 +193,13 @@ srli t0, t0, 1
 MYSLLI t1, t1, 1
 srli t1, t1, 1
 53:
-MYSLT \rd, t0, t1
+MYSLT t2, t0, t1
+sw t2, 12(sp)
+lw t2, 8(sp)
 lw t1, 4(sp)
 lw t0, 0(sp)
-addi sp, sp, 8
+lw \rd, 12(sp)              #restore rd
+addi sp, sp, 16
 .endm
 
 .macro MYSLTIU2 rd, r1, imm
