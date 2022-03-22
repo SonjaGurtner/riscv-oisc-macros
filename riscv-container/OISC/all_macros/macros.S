@@ -91,7 +91,7 @@ blt t0, t1, 32f             #compare upper 31 bits with less than
 beq x0, x0, 31f
 
 #upper 31 bits are the same, compare lower 31 bits
-30
+30:
 sub t0, x0, \r1
 sub t0, x0, t0
 sub t1, x0, \r2
@@ -102,7 +102,7 @@ MYSLLI t1, t1, 1
 srli t1, t1, 1
 blt t0, t1, 32f             #r2 < r1, jump to imm
 
-31:                          #just restore registers, do nothing
+31:                         #just restore registers, do nothing
 lw t1, 4(sp)
 lw t0, 0(sp)
 addi sp, sp, 8
