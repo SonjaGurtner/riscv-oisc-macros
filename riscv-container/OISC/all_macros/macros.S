@@ -202,31 +202,11 @@ lw \rd, 12(sp)              #restore rd
 addi sp, sp, 16
 .endm
 
-.macro MYSLTIU2 rd, r1, imm
-addi sp, sp, -4
-sw t0, 0(sp)
-MYADDI t0, x0, \imm
-MYSLTU \rd, \r1, t0
-lw t0, 0(sp)
-addi sp, sp, 4
-.endm
-
 .macro MYLUI rd, imm
-#labels have to be unique so cannot use slli_loop if called multiple times
-#need to use 1 and then 1b or 1f which makes it unique
+#lui takes 20 bit but addi has 12
 #lui is shift left by 12
 MYADDI \rd, x0, \imm        #rd = imm
 MYSLLI \rd, \rd, 12
-.endm
-
-.macro MYSLLI2, rd, r1, imm
-#alternative version, just write imm to register and call MYSLL
-addi sp, sp, -4
-sw t0, 0(sp)
-MYADDI t0, x0, \imm         #t0 = -imm
-MYSLL \rd, \r1, t0
-lw t0, 0(sp)
-addi sp, sp, 4
 .endm
 
 .macro MYSLLI, rd, r1, imm
