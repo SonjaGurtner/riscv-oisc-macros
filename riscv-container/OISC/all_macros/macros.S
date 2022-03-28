@@ -7,9 +7,9 @@ str:      .ascii "Hello\n"
 
 .macro MYADD, rd, r1, r2
 addi sp, sp, -12
-sw t0, 0(sp)                #save t0
+sw t0, 0(sp)
 sw t1, 4(sp)
-sub t1, x0, \r1
+sub t1, x0, \r1             #t1 = r1
 sub t1, x0, t1
 sub t0, x0, \r2             #t0 = -a0
 sub \rd, t1, t0             #rd = r1 -(-a0)
@@ -24,7 +24,7 @@ addi sp, sp, 12
 addi sp, sp, -12
 sw t0, 0(sp)
 sw t1, 4(sp)
-sub t1, x0, \r1
+sub t1, x0, \r1             #t1 = r1
 sub t1, x0, t1
 addi t0, x0, \imm           #t0 = imm
 sub t0, x0, t0              #t0 = -imm
@@ -37,14 +37,18 @@ addi sp, sp, 12
 .endm
 
 .macro SUBI rd, r1, imm
-addi sp, sp, -8
-sw t0, 0(sp)      
+addi sp, sp, -12
+sw t0, 0(sp)
+sw t1, 4(sp)
+sub t1, x0, \r1             #t1 = r1
+sub t1, x0, t1
 MYADDI t0, x0, \imm         #t0 = imm
-sub \rd, \r1, t0            #rd = r1 -(-imm)
-sw \rd, 4(sp)
+sub \rd, t1, t0             #rd = r1 -(-imm)
+sw \rd, 8(sp)
+lw t1, 4(sp)
 lw t0, 0(sp)
-lw \rd, 4(sp)
-addi sp, sp, 8
+lw \rd, 8(sp)
+addi sp, sp, 12
 .endm
 
 #only replace JAL command as we need to keep jalr to manipulate pc directly
@@ -148,15 +152,19 @@ addi sp, sp, -16
 sw t0, 0(sp)
 sw t1, 4(sp)
 sw t2, 8(sp)                #will become rd
-MYADD t0, x0, \r1           #t0 = r1
-MYADD t1, x0, \r2           #t1 = r2
+sub t0, x0, \r1             #t0 = r1
+sub t0, x0, t0
+sub t1, x0, \r2             #t1 = r2
+sub t1, x0, t1
 srli t0, t0, 1              #eliminate LSB and get leading 0
 srli t1, t1, 1
 beq t0, t1, 50f             #compare lower 31 bits
 beq x0, x0, 51f             #else just slt
 50:
-MYADD t0, x0, \r1
-MYADD t1, x0, \r2
+sub t0, x0, \r1             #t0 = r1
+sub t0, x0, t0
+sub t1, x0, \r2             #t1 = r2
+sub t1, x0, t1
 MYSLLI t0, t0, 1            #shift left and right to eliminate MSB
 srli t0, t0, 1
 MYSLLI t1, t1, 1
@@ -164,7 +172,7 @@ srli t1, t1, 1
 51:
 MYSLT t2, t0, t1
 sw t2, 12(sp)               #save rd on stack
-lw t2, 8(sp)
+lw t2, 8(sp)                #restore other registers
 lw t1, 4(sp)
 lw t0, 0(sp)
 lw \rd, 12(sp)              #restore rd
@@ -179,7 +187,8 @@ addi sp, sp, -16
 sw t0, 0(sp)
 sw t1, 4(sp)
 sw t2, 8(sp)                #will become rd
-MYADD t0, x0, \r1           #t0 = r1
+sub t0, x0, \r1             #t0 = r1
+sub t0, x0, t0
 MYADDI t1, x0, \imm         #t1 = imm
 srli t0, t0, 1              #eliminate LSB and get leading 0
 srli t1, t1, 1
@@ -200,13 +209,6 @@ lw t1, 4(sp)
 lw t0, 0(sp)
 lw \rd, 12(sp)              #restore rd
 addi sp, sp, 16
-.endm
-
-.macro MYLUI rd, imm
-#lui takes 20 bit but addi has 12
-#lui is shift left by 12
-MYADDI \rd, x0, \imm        #rd = imm
-MYSLLI \rd, \rd, 12
 .endm
 
 .macro MYSLLI, rd, r1, imm
@@ -243,27 +245,33 @@ addi sp, sp, 20
 .endm
 
 .macro MYSLL, rd, r1, r2
-addi sp, sp, -12
+addi sp, sp, -20
 sw t0, 0(sp)                #save registers
 sw t1, 4(sp)
 sw t2, 8(sp)
-MYADD t1, x0, \r2           #loop boundary
+sw t3, 12(sp)               #t3 will become rd
+sub t1, x0, \r2             #loop boundary
+sub t1, x0, t1
 MYADDI t2, x0, 0            #loop variable i
-MYADD \rd, x0, \r1          #rd = r1
-sub t0, x0, \rd             #t0 = -rd
+sub t3, x0, \r1             #t3 = r1
+sub t3, x0, t3
+sub t0, x0, t3              #t0 = -rd
 
 62:
-beq t2, t1, 63f              #loop end condition
-sub \rd, \rd, t0            #rd - (-rd) => rd*2
-sub t0, x0, \rd             #t0 = -rd
+beq t2, t1, 63f             #loop end condition
+sub t3, t3, t0              #rd - (-rd) => rd*2
+sub t0, x0, t3              #t0 = -rd
 MYADDI t2, t2, 1            #i++
 beq x0, x0, 62b
 
 63:
-lw t2, 8(sp)                #restore registers
+sw t3, 16(sp)               #save t3
+lw t3, 12(sp)               #restore registers
+lw t2, 8(sp)
 lw t1, 4(sp)
 lw t0, 0(sp)
-addi sp, sp, 12
+lw \rd, 16(sp)
+addi sp, sp, 20
 .endm
 
 .macro MYOR rd, r1, r2
@@ -280,31 +288,33 @@ sw t6, 12(sp)               #msb eliminated r2 for comparison
 sw t0, 16(sp)               #1, for comparing MSBs
 sw t1, 20(sp)               #loop variable i
 sw t2, 24(sp)               #loop limit = 32   
-sw s1, 28(sp)
+sw s1, 28(sp)               #will be value for rd
 
-MYADD t3, x0, \r1
-MYADD t4, x0, \r2
+sub t3, x0, \r1
+sub t3, x0, t3
+sub t4, x0, \r2
+sub t4, x0, t4
 MYADDI t0, x0, 1
 MYADDI t1, x0, 1
-MYADDI t2, x0, 32
-MYADD s1, x0, x0           #clean s1 for result, will become value for rd
+MYADDI t2, x0, 33
+sub s1, x0, x0              #clean s1 for result, will become value for rd
 
 101:
-bgt t1, t2, 106f              #i=33, loop limit reached, compared each bit
+beq t1, t2, 106f            #i=33, loop limit reached, compared each bit
 MYSLLI s1, s1, 1            #shift rd left by one
 MYSLLI t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
 MYSLLI t6, t4, 1              
 srli t6, t6, 1              #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
-bne t5, x0, 102f
+MYBNE t5, x0, 102f
 110:
 sub t6, t4, t6              #extracted MSB of r2
-bne t6, x0, 103f
+MYBNE t6, x0, 103f
 111:
 MYADD t5, t5, t6            #MSB of r1 + MSB of r2
-bgt t5, x0, 104f              #sum has to be at least 1 (0|1; 1|1)
-beq x0, x0, 105f              #if not the case (0|0) shift to left to add 0
+blt x0, t5, 104f            #sum has to be at least 1 (0|1; 1|1)
+beq x0, x0, 105f            #if not the case (0|0) shift to left to add 0
 
 102:
 MYADDI t5, x0, 1
@@ -321,17 +331,17 @@ MYADDI s1, s1, 1           #s1+=1
 MYADDI t1, t1, 1            #i++
 MYSLLI t3, t3, 1            #shift r1 by 1
 MYSLLI t4, t4, 1            #shift r2 by 1
-beq x0, x0, 101b              #loop again
+beq x0, x0, 101b            #loop again
 
-107:                          #special case r1=0, return r2
+107:                        #special case r1=0, return r2
 MYADD \rd, x0, \r2
 beq x0, x0, 109f
 
-108:                          #special case r2=0, return r1
+108:                        #special case r2=0, return r1
 MYADD \rd, x0, \r1
 beq x0, x0, 109f
 
-106:                          #end, estore registers
+106:                        #end, estore registers
 sw s1, 32(sp)               #save return value which will become rd
 lw s1, 28(sp)
 lw t2, 24(sp)              
@@ -360,31 +370,33 @@ sw t6, 12(sp)               #msb eliminated r2 for comparison
 sw t0, 16(sp)               #1, for comparing MSBs
 sw t1, 20(sp)               #loop variable i
 sw t2, 24(sp)               #loop limit = 32   
-sw s1, 28(sp)
+sw s1, 28(sp)               #will be value for rd
 
-MYADD t3, x0, \r1
-MYADD t4, x0, \r2
+sub t3, x0, \r1
+sub t3, x0, t3
+sub t4, x0, \r2
+sub t4, x0, t4
 MYADDI t0, x0, 1
 MYADDI t1, x0, 1
-MYADDI t2, x0, 32
-MYADD s1, x0, x0            #clean rd for result
+MYADDI t2, x0, 33
+sub s1, x0, x0              #clean rd for result
 
 121:
-bgt t1, t2, 126f            #i=33, loop limit reached, compared each bit
+beq t1, t2, 126f            #i=33, loop limit reached, compared each bit
 MYSLLI s1, s1, 1            #shift rd left by one
 MYSLLI t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
 MYSLLI t6, t4, 1              
 srli t6, t6, 1              #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
-bne t5, x0, 122f
+MYBNE t5, x0, 122f
 130:
 sub t6, t4, t6              #extracted MSB of r2
-bne t6, x0, 123f
+MYBNE t6, x0, 123f
 131:
 MYADD t5, t5, t6            #MSB of r1 + MSB of r2
-beq t5, x0, 124f            #sum has to be exactly 1 (0|1; 1|0)
-beq x0, x0, 125f            #if not the case (0|0, (1|1) shift to left to MYADD 0
+beq t5, t0, 124f            #sum has to be exactly 1 (0^1; 1^0)
+beq x0, x0, 125f            #if not the case (0^0; 1^1) shift to left to MYADD 0
 
 122:
 MYADDI t5, x0, 1
@@ -404,11 +416,13 @@ MYSLLI t4, t4, 1            #shift r2 by 1
 beq x0, x0, 121b            #loop again
 
 127:                        #special case r1=0, return r2
-MYADD \rd, x0, \r2
+sub \rd, x0, \r2
+sub \rd, x0, \rd
 beq x0, x0, 129f
 
 128:                        #special case r2=0, return r1
-MYADD \rd, x0, \r1
+sub \rd, x0, \r1
+sub \rd, x0, \rd
 beq x0, x0, 129f
 
 126:                        #end, estore registers
@@ -423,11 +437,16 @@ lw t4, 4(sp)
 lw t3, 0(sp)
 lw \rd, 32(sp)
 addi sp, sp, 36
+
 129:
 .endm
 
 .macro MYAND rd, r1, r2
-addi sp, sp, -28
+#check special cases, BEFORE overwriting temp registers (one of them may be r1 or r2)
+#beq \r1, x0, 147f           #r1 or r2 = 0, return 0
+#beq \r2, x0, 147f
+
+addi sp, sp, -36
 sw t3, 0(sp)                #shifting r1
 sw t4, 4(sp)                #shifting r2
 sw t5, 8(sp)                #msb eliminated r1 for comparison, also contains MSB sum
@@ -435,34 +454,33 @@ sw t6, 12(sp)               #msb eliminated r2 for comparison
 sw t0, 16(sp)               #1, for comparing MSBs
 sw t1, 20(sp)               #loop variable i
 sw t2, 24(sp)               #loop limit = 32   
+sw s1, 28(sp)               #will be value for rd     
 
-#check special cases, BEFORE overwriting temp registers (one of them may be r1 or r2)
-beq \r1, x0, 147f           #r1 or r2 = 0, return 0
-beq \r2, x0, 147f             
-
-MYADD t3, x0, \r1
-MYADD t4, x0, \r2
-MYADDI t0, x0, 1
+sub t3, x0, \r1
+sub t3, x0, t3
+sub t4, x0, \r2
+sub t4, x0, t4
+MYADDI t0, x0, 2
 MYADDI t1, x0, 1
-MYADDI t2, x0, 32
-MYADD \rd, x0, x0           #clean rd for result
+MYADDI t2, x0, 33
+sub s1, x0, x0              #clean rd for result
 
 141:
-bgt t1, t2, 146f            #i=33, loop limit reached, compared each bit
-MYSLLI \rd, \rd, 1          #shift rd left by one
+beq t1, t2, 146f            #i=33, loop limit reached, compared each bit
+MYSLLI s1, s1, 1            #shift rd left by one
 MYSLLI t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
 MYSLLI t6, t4, 1              
 srli t6, t6, 1              #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
-bne t5, x0, 142f
+MYBNE t5, x0, 142f
 150:
 sub t6, t4, t6              #extracted MSB of r2
-bne t6, x0, 143f
+MYBNE t6, x0, 143f
 151:
 MYADD t5, t5, t6            #MSB of r1 + MSB of r2
-bgt t5, x0, 144f            #sum has to be at least 1 (0|1; 1|1)
-beq x0, x0, 145f            #if not the case (0|0) shift to left to MYADD 0
+beq t5, t0, 144f            #sum has to be exactly 2 (1&1)
+beq x0, x0, 145f            #if not the case (0&0; 0&1) shift to left to MYADD 0
 
 142:
 MYADDI t5, x0, 1
@@ -473,7 +491,7 @@ MYADDI t6, x0, 1
 beq x0, x0, 151b
 
 144:
-MYADDI \rd, \rd, 1          #rd+=1
+MYADDI s1, s1, 1            #rd+=1
 
 145:
 MYADDI t1, t1, 1            #i++
@@ -482,10 +500,12 @@ MYSLLI t4, t4, 1            #shift r2 by 1
 beq x0, x0, 141b            #loop again
 
 147:                         
-MYADD \rd, x0, x0
-beq x0, x0, 146f
+sub \rd, x0, x0             #return 0
+beq x0, x0, 149f
 
 146:                        #end, estore registers
+sw s1, 32(sp)
+lw s1, 28(sp)
 lw t2, 24(sp)              
 lw t1, 20(sp)             
 lw t0, 16(sp)
@@ -493,34 +513,43 @@ lw t6, 12(sp)
 lw t5, 8(sp)
 lw t4, 4(sp)
 lw t3, 0(sp)
-addi sp, sp, 28
+lw \rd, 32(sp)
+addi sp, sp, 36
+
+149:
 .endm
 
 .macro MYXORI rd, r1, imm
-addi sp, sp, -4
+addi sp, sp, -8
 sw t0, 0(sp)
 MYADDI t0, x0, \imm
 MYXOR \rd, \r1, t0
+sw \rd, 4(sp)
 lw t0, 0(sp)
-addi sp, sp, 4
+lw \rd, 4(sp)
+addi sp, sp, 8
 .endm
 
 .macro MYORI rd, r1, imm
-addi sp, sp, -4
+addi sp, sp, -8
 sw t0, 0(sp)
 MYADDI t0, x0, \imm
 MYOR \rd, \r1, t0
+sw \rd, 4(sp)
 lw t0, 0(sp)
-addi sp, sp, 4
+lw \rd, 4(sp)
+addi sp, sp, 8
 .endm
 
 .macro MYANDI rd, r1, imm
-addi sp, sp, -4
+addi sp, sp, -8
 sw t0, 0(sp)
 MYADDI t0, x0, \imm
 MYAND \rd, \r1, t0
+sw \rd, 4(sp)
 lw t0, 0(sp)
-addi sp, sp, 4
+lw \rd, 4(sp)
+addi sp, sp, 8
 .endm
 
 ############################## PROGRAMM 
@@ -552,7 +581,6 @@ addi t0, x0, 1		    #loop limit
 loopstart: 				
 beq t2, t0, end	        #if t2 <= 0 exit loop
 add a1, s2, s3	    	#a1 = fib
-#ori s2, s3, 0       	#copy value
 MYORI s2, s3, 0
 MYXORI s3, a1, 0	    #keep value		
 addi t2, t2, 1	    	#t2++
@@ -562,6 +590,7 @@ end:
 addi a2, x0, 1
 MYSLT a3, a2, x0
 addi t1, x0, 5
+MYAND s4, t1, x0
 MYADDI t1, t1, -3
 #MYSLLI s4, a1, 1
 #MYLUI s5, 4
