@@ -229,6 +229,7 @@ sw \r1, 16(sp)
 lw t3, 16(sp)               #t3 = r1, will become rd
 sub t0, x0, t3              #t0 = -rd
 MYADDI t1, x0, \imm         #t1 = exit condition
+andi t1, t1, 31
 MYADDI t2, x0, 0            #loop variable i
 
 60:
@@ -257,8 +258,9 @@ sw t3, 12(sp)               #t3 will become rd
 sw \r1, 16(sp)
 sw \r2, 20(sp)
 lw t1, 20(sp)               #t1=t2, loop boundary
+andi t1, t1, 31
 MYADDI t2, x0, 0            #loop variable i
-lw t3, x0, 16(sp)           #t3 = r1
+lw t3, 16(sp)               #t3 = r1
 sub t0, x0, t3              #t0 = -rd
 
 62:
@@ -582,6 +584,9 @@ sw   a6, 0(t0)
 
 _start:
 ###FUZZ
+MYADDI x8, x24, 1643
+MYSLLI x30, x8, 1643
+
 #SYS_EXIT 0
 ###
 
