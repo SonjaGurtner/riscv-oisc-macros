@@ -106,9 +106,9 @@ beq x0, x0, 31f
 30:
 lw t0, 8(sp)
 lw t1, 12(sp)
-MYSLLI t0, t0, 1            #eliminate MSB
+MYSLLI_SAFE t0, t0, 1            #eliminate MSB
 srli t0, t0, 1
-MYSLLI t1, t1, 1
+MYSLLI_SAFE t1, t1, 1
 srli t1, t1, 1
 blt t0, t1, 32f             #r2 < r1, jump to imm
 
@@ -169,9 +169,9 @@ beq x0, x0, 51f             #else just slt
 50:
 lw t0, 12(sp)               #t0 = r1
 lw t1, 16(sp)               #t1 = r2
-MYSLLI t0, t0, 1            #shift left and right to eliminate MSB
+MYSLLI_SAFE t0, t0, 1            #shift left and right to eliminate MSB
 srli t0, t0, 1
-MYSLLI t1, t1, 1
+MYSLLI_SAFE t1, t1, 1
 srli t1, t1, 1
 51:
 MYSLT t2, t0, t1
@@ -201,9 +201,9 @@ beq x0, x0, 53f             #else just slt
 52:
 lw t0, 12(sp)
 MYADDI t1, x0, \imm
-MYSLLI t0, t0, 1            #shift left and right to eliminate MSB
+MYSLLI_SAFE t0, t0, 1            #shift left and right to eliminate MSB
 srli t0, t0, 1
-MYSLLI t1, t1, 1
+MYSLLI_SAFE t1, t1, 1
 srli t1, t1, 1
 53:
 MYSLT t2, t0, t1
@@ -215,7 +215,39 @@ lw \rd, 16(sp)              #restore rd
 addi sp, sp, 20
 .endm
 
-.macro MYSLLI, rd, r1, imm
+.macro MYSLLI rd, r1, imm
+addi sp, sp, -12
+sw t0, 0(sp)
+sw t1, 4(sp)
+sub t1, x0, \r1
+sub t1, x0, t1
+MYADDI t0, x0, \imm
+MYANDI t0, t0, 31
+MYSLL_SAFE \rd, t1, t0
+sw \rd, 8(sp)
+lw t1, 4(sp)
+lw t0, 0(sp)
+lw \rd, 8(sp)
+addi sp, sp, 12
+.endm
+
+.macro MYSLL rd, r1, r2
+addi sp, sp, -12
+sw t0, 0(sp)
+sw t1, 4(sp)
+sub t1, x0, \r1
+sub t1, x0, t1
+MYADD t0, x0, \r2
+MYANDI t0, t0, 31
+MYSLL_SAFE \rd, t1, t0
+sw \rd, 8(sp)
+lw t1, 4(sp)
+lw t0, 0(sp)
+lw \rd, 8(sp)
+addi sp, sp, 12
+.endm
+
+.macro MYSLLI_SAFE rd, r1, imm
 # shift amount should be positive, negativ leads to infinite loop in this macro
 # and overflow or smth in real sll
 # shift by 1 means * 2 (=add to itself)
@@ -229,7 +261,7 @@ sw \r1, 16(sp)
 lw t3, 16(sp)               #t3 = r1, will become rd
 sub t0, x0, t3              #t0 = -rd
 MYADDI t1, x0, \imm         #t1 = exit condition
-andi t1, t1, 31
+#andi t1, t1, 31
 MYADDI t2, x0, 0            #loop variable i
 
 60:
@@ -249,7 +281,7 @@ lw \rd, 20(sp)
 addi sp, sp, 24
 .endm
 
-.macro MYSLL, rd, r1, r2
+.macro MYSLL_SAFE rd, r1, r2
 addi sp, sp, -28
 sw t0, 0(sp)                #save registers
 sw t1, 4(sp)
@@ -258,7 +290,7 @@ sw t3, 12(sp)               #t3 will become rd
 sw \r1, 16(sp)
 sw \r2, 20(sp)
 lw t1, 20(sp)               #t1=t2, loop boundary
-andi t1, t1, 31
+#andi t1, t1, 31
 MYADDI t2, x0, 0            #loop variable i
 lw t3, 16(sp)               #t3 = r1
 sub t0, x0, t3              #t0 = -rd
@@ -307,10 +339,10 @@ sub s1, x0, x0              #clean s1 for result, will become value for rd
 
 101:
 beq t1, t2, 106f            #i=33, loop limit reached, compared each bit
-MYSLLI s1, s1, 1            #shift rd left by one
-MYSLLI t5, t3, 1              
+MYSLLI_SAFE s1, s1, 1            #shift rd left by one
+MYSLLI_SAFE t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
-MYSLLI t6, t4, 1              
+MYSLLI_SAFE t6, t4, 1              
 srli t6, t6, 1              #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
 MYBNE t5, x0, 102f
@@ -335,8 +367,8 @@ MYADDI s1, s1, 1           #s1+=1
 
 105:
 MYADDI t1, t1, 1            #i++
-MYSLLI t3, t3, 1            #shift r1 by 1
-MYSLLI t4, t4, 1            #shift r2 by 1
+MYSLLI_SAFE t3, t3, 1       #shift r1 by 1
+MYSLLI_SAFE t4, t4, 1       #shift r2 by 1
 beq x0, x0, 101b            #loop again
 
 107:                        #special case r1=0, return r2
@@ -367,8 +399,8 @@ addi sp, sp, 44
 
 .macro MYXOR rd, r1, r2
 #special cases
-beq \r1, x0, 127f             #r1 = 0, return r2
-beq \r2, x0, 128f             #r2 = 0, return r1
+beq \r1, x0, 127f           #r1 = 0, return r2
+beq \r2, x0, 128f           #r2 = 0, return r1
 
 addi sp, sp, -44
 sw t3, 0(sp)                #shifting r1
@@ -391,10 +423,10 @@ sub s1, x0, x0              #clean rd for result
 
 121:
 beq t1, t2, 126f            #i=33, loop limit reached, compared each bit
-MYSLLI s1, s1, 1            #shift rd left by one
-MYSLLI t5, t3, 1              
+MYSLLI_SAFE s1, s1, 1            #shift rd left by one
+MYSLLI_SAFE t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
-MYSLLI t6, t4, 1              
+MYSLLI_SAFE t6, t4, 1              
 srli t6, t6, 1              #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
 MYBNE t5, x0, 122f
@@ -419,8 +451,8 @@ MYADDI s1, s1, 1            #rd+=1
 
 125:
 MYADDI t1, t1, 1            #i++
-MYSLLI t3, t3, 1            #shift r1 by 1
-MYSLLI t4, t4, 1            #shift r2 by 1
+MYSLLI_SAFE t3, t3, 1            #shift r1 by 1
+MYSLLI_SAFE t4, t4, 1            #shift r2 by 1
 beq x0, x0, 121b            #loop again
 
 127:                        #special case r1=0, return r2
@@ -475,10 +507,10 @@ sub s1, x0, x0              #clean rd for result
 
 141:
 beq t1, t2, 146f            #i=33, loop limit reached, compared each bit
-MYSLLI s1, s1, 1            #shift rd left by one
-MYSLLI t5, t3, 1              
+MYSLLI_SAFE s1, s1, 1            #shift rd left by one
+MYSLLI_SAFE t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
-MYSLLI t6, t4, 1              
+MYSLLI_SAFE t6, t4, 1              
 srli t6, t6, 1              #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
 MYBNE t5, x0, 142f
@@ -503,8 +535,8 @@ MYADDI s1, s1, 1            #rd+=1
 
 145:
 MYADDI t1, t1, 1            #i++
-MYSLLI t3, t3, 1            #shift r1 by 1
-MYSLLI t4, t4, 1            #shift r2 by 1
+MYSLLI_SAFE t3, t3, 1            #shift r1 by 1
+MYSLLI_SAFE t4, t4, 1            #shift r2 by 1
 beq x0, x0, 141b            #loop again
 
 147:                         
@@ -585,7 +617,7 @@ sw   a6, 0(t0)
 _start:
 ###FUZZ
 MYADDI x8, x24, 1643
-MYSLLI x30, x8, 1643
+MYSLL x30, x8, x8
 
 #SYS_EXIT 0
 ###
