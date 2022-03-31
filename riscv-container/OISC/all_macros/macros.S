@@ -115,7 +115,7 @@ blt t0, t1, 32f             #r2 < r1, jump to imm
 31:                         #just restore registers, do nothing
 lw t1, 4(sp)
 lw t0, 0(sp)
-addi sp, sp, 20
+addi sp, sp, 16
 beq x0, x0, 33f
 
 32:
@@ -169,7 +169,7 @@ beq x0, x0, 51f             #else just slt
 50:
 lw t0, 12(sp)               #t0 = r1
 lw t1, 16(sp)               #t1 = r2
-MYSLLI_SAFE t0, t0, 1            #shift left and right to eliminate MSB
+MYSLLI_SAFE t0, t0, 1       #shift left and right to eliminate MSB
 srli t0, t0, 1
 MYSLLI_SAFE t1, t1, 1
 srli t1, t1, 1
@@ -201,7 +201,7 @@ beq x0, x0, 53f             #else just slt
 52:
 lw t0, 12(sp)
 MYADDI t1, x0, \imm
-MYSLLI_SAFE t0, t0, 1            #shift left and right to eliminate MSB
+MYSLLI_SAFE t0, t0, 1       #shift left and right to eliminate MSB
 srli t0, t0, 1
 MYSLLI_SAFE t1, t1, 1
 srli t1, t1, 1
@@ -216,35 +216,36 @@ addi sp, sp, 20
 .endm
 
 .macro MYSLLI rd, r1, imm
-addi sp, sp, -12
+addi sp, sp, -16
 sw t0, 0(sp)
 sw t1, 4(sp)
-sub t1, x0, \r1
-sub t1, x0, t1
+sw \r1, 8(sp)
+lw t1, 8(sp)
 MYADDI t0, x0, \imm
 MYANDI t0, t0, 31
 MYSLL_SAFE \rd, t1, t0
-sw \rd, 8(sp)
+sw \rd, 12(sp)
 lw t1, 4(sp)
 lw t0, 0(sp)
-lw \rd, 8(sp)
-addi sp, sp, 12
+lw \rd, 12(sp)
+addi sp, sp, 16
 .endm
 
 .macro MYSLL rd, r1, r2
-addi sp, sp, -12
+addi sp, sp, -20
 sw t0, 0(sp)
 sw t1, 4(sp)
-sub t1, x0, \r1
-sub t1, x0, t1
-MYADD t0, x0, \r2
+sw \r1, 8(sp)
+sw \r2, 12(sp)
+lw t1, 8(sp)
+lw t0, 12(sp)
 MYANDI t0, t0, 31
 MYSLL_SAFE \rd, t1, t0
-sw \rd, 8(sp)
+sw \rd, 16(sp)
 lw t1, 4(sp)
 lw t0, 0(sp)
-lw \rd, 8(sp)
-addi sp, sp, 12
+lw \rd, 16(sp)
+addi sp, sp, 20
 .endm
 
 .macro MYSLLI_SAFE rd, r1, imm
@@ -339,7 +340,7 @@ sub s1, x0, x0              #clean s1 for result, will become value for rd
 
 101:
 beq t1, t2, 106f            #i=33, loop limit reached, compared each bit
-MYSLLI_SAFE s1, s1, 1            #shift rd left by one
+MYSLLI_SAFE s1, s1, 1       #shift rd left by one
 MYSLLI_SAFE t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
 MYSLLI_SAFE t6, t4, 1              
@@ -363,7 +364,7 @@ MYADDI t6, x0, 1
 beq x0, x0, 111b
 
 104:
-MYADDI s1, s1, 1           #s1+=1
+MYADDI s1, s1, 1            #s1+=1
 
 105:
 MYADDI t1, t1, 1            #i++
@@ -451,8 +452,8 @@ MYADDI s1, s1, 1            #rd+=1
 
 125:
 MYADDI t1, t1, 1            #i++
-MYSLLI_SAFE t3, t3, 1            #shift r1 by 1
-MYSLLI_SAFE t4, t4, 1            #shift r2 by 1
+MYSLLI_SAFE t3, t3, 1       #shift r1 by 1
+MYSLLI_SAFE t4, t4, 1       #shift r2 by 1
 beq x0, x0, 121b            #loop again
 
 127:                        #special case r1=0, return r2
@@ -483,7 +484,7 @@ addi sp, sp, 44
 
 .macro MYAND rd, r1, r2
 #check special cases, BEFORE overwriting temp registers (one of them may be r1 or r2)
-#beq \r1, x0, 147f           #r1 or r2 = 0, return 0
+#beq \r1, x0, 147f          #r1 or r2 = 0, return 0
 #beq \r2, x0, 147f
 
 addi sp, sp, -44
@@ -507,7 +508,7 @@ sub s1, x0, x0              #clean rd for result
 
 141:
 beq t1, t2, 146f            #i=33, loop limit reached, compared each bit
-MYSLLI_SAFE s1, s1, 1            #shift rd left by one
+MYSLLI_SAFE s1, s1, 1       #shift rd left by one
 MYSLLI_SAFE t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
 MYSLLI_SAFE t6, t4, 1              
@@ -535,8 +536,8 @@ MYADDI s1, s1, 1            #rd+=1
 
 145:
 MYADDI t1, t1, 1            #i++
-MYSLLI_SAFE t3, t3, 1            #shift r1 by 1
-MYSLLI_SAFE t4, t4, 1            #shift r2 by 1
+MYSLLI_SAFE t3, t3, 1       #shift r1 by 1
+MYSLLI_SAFE t4, t4, 1       #shift r2 by 1
 beq x0, x0, 141b            #loop again
 
 147:                         
@@ -616,10 +617,12 @@ sw   a6, 0(t0)
 
 _start:
 ###FUZZ
-MYADDI x8, x24, 1643
-MYSLL x30, x8, x8
-
-#SYS_EXIT 0
+addi x25, x10, -1758
+slti x9, x12, 1308
+xor x24, x12, x9
+addi x14, x25, --806
+MYSLL x9, x14, x24
+SYS_EXIT 0
 ###
 
 addi s2, x0, 0		    #fib1 = 0
