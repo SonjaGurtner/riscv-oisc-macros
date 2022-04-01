@@ -134,23 +134,29 @@ MYBLTU \r2, \r1, \imm
 .endm
 
 .macro MYSLT rd, r1, r2
-sub \rd, \r1, \r2           #rd = r1 - r2
-blt \rd, x0, 40f            #if rd < 0 (r1 < r2)
-sub \rd, x0, x0             #r1 > r2, rd = 0
+blt \r1, \r2, 40f
+sub \rd, x0, x0
 beq x0, x0, 41f
+
 40:
 MYADDI \rd, x0, 1           #rd = 1
-41:                         #end
+
+41:
 .endm
 
 .macro MYSLTI rd, r1, imm
-SUBI \rd, \r1, \imm         #rd = r1 - imm
-blt \rd, x0, 42f            #if rd < 0 (r1 < r2)
-sub \rd, x0, x0             #r1 > r2, rd = 0
-beq x0, x0, 43f
-42:
-MYADDI \rd, x0, 1           #rd = 1
-43:                         #end
+addi sp, sp, -16
+sw t0, 0(sp)
+sw t1, 4(sp)
+sw \r1, 8(sp)
+lw t1, 8(sp)
+MYADDI t0, x0, \imm         #t0 = imm
+MYSLT \rd, t1, t0
+sw \rd, 12(sp)
+lw t1, 4(sp)
+lw t0, 0(sp)
+lw \rd, 12(sp)
+addi sp, sp, 16
 .endm
 
 .macro MYSLTU rd, r1, r2
@@ -616,15 +622,6 @@ sw   a6, 0(t0)
 .endm
 
 _start:
-###FUZZ
-addi x25, x10, -1758
-slti x9, x12, 1308
-xor x24, x12, x9
-addi x14, x25, --806
-MYSLL x9, x14, x24
-SYS_EXIT 0
-###
-
 addi s2, x0, 0		    #fib1 = 0
 addi s3, x0, 1          #fib2 = 1
 addi a1, x0, 0          #return val
