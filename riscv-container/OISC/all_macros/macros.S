@@ -127,10 +127,44 @@ beq x0, x0, \imm            #jump to label
 33:                         #end
 .endm
 
-#branch if r1 >= r2 meaning that r2 < r1
-#just call bltu with r2 and r1
 .macro MYBGEU r1, r2, imm
-MYBLTU \r2, \r1, \imm
+addi sp, sp, -16
+sw t0, 0(sp)
+sw t1, 4(sp)
+sw \r1, 8(sp)
+sw \r2, 12(sp)
+lw t0, 8(sp)                #t0 = r1
+lw t1, 12(sp)               #t1 = r2
+#compare upper 31 bits
+srli t0, t0, 1              #eliminate LSB, get leading 0
+srli t1, t1, 1
+beq t0, t1, 30f             #if upper 31 bits are the same
+MYBGE t0, t1, 32f           #compare upper 31 bits with greater equal
+beq x0, x0, 31f
+
+#upper 31 bits are the same, compare lower 31 bits
+30:
+lw t0, 8(sp)
+lw t1, 12(sp)
+MYSLLI_SAFE t0, t0, 1       #eliminate MSB
+srli t0, t0, 1
+MYSLLI_SAFE t1, t1, 1
+srli t1, t1, 1
+MYBGE t0, t1, 32f           #r2 < r1, jump to imm
+
+31:                         #just restore registers, do nothing
+lw t1, 4(sp)
+lw t0, 0(sp)
+addi sp, sp, 16
+beq x0, x0, 33f
+
+32:
+lw t1, 4(sp)
+lw t0, 0(sp)
+addi sp, sp, 16
+beq x0, x0, \imm            #jump to label
+
+33:                         #end
 .endm
 
 .macro MYSLT rd, r1, r2
@@ -490,8 +524,8 @@ addi sp, sp, 44
 
 .macro MYAND rd, r1, r2
 #check special cases, BEFORE overwriting temp registers (one of them may be r1 or r2)
-#beq \r1, x0, 147f          #r1 or r2 = 0, return 0
-#beq \r2, x0, 147f
+beq \r1, x0, 147f          #r1 or r2 = 0, return 0
+beq \r2, x0, 147f
 
 addi sp, sp, -44
 sw t3, 0(sp)                #shifting r1
@@ -567,7 +601,7 @@ addi sp, sp, 44
 .endm
 
 .macro MYXORI rd, r1, imm
-addi sp, sp, -16
+addi sp, sp, -12
 sw t0, 0(sp)
 sw t1, 4(sp)
 sub t1, x0, \r1
@@ -578,11 +612,11 @@ sw \rd, 8(sp)
 lw t1, 4(sp)
 lw t0, 0(sp)
 lw \rd, 8(sp)
-addi sp, sp, 16
+addi sp, sp, 12
 .endm
 
 .macro MYORI rd, r1, imm
-addi sp, sp, -16
+addi sp, sp, -12
 sw t0, 0(sp)
 sw t1, 4(sp)
 sub t1, x0, \r1
@@ -593,11 +627,11 @@ sw \rd, 8(sp)
 lw t1, 4(sp)
 lw t0, 0(sp)
 lw \rd, 8(sp)
-addi sp, sp, 16
+addi sp, sp, 12
 .endm
 
 .macro MYANDI rd, r1, imm
-addi sp, sp, -16
+addi sp, sp, -12
 sw t0, 0(sp)
 sw t1, 4(sp)
 sub t1, x0, \r1
@@ -608,7 +642,7 @@ sw \rd, 8(sp)
 lw t1, 4(sp)
 lw t0, 0(sp)
 lw \rd, 8(sp)
-addi sp, sp, 16
+addi sp, sp, 12
 .endm
 
 ############################## PROGRAMM 
