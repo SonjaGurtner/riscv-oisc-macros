@@ -220,7 +220,7 @@ lw t2, 8(sp)                #restore other registers
 lw t1, 4(sp)
 lw t0, 0(sp)
 lw \rd, 20(sp)              #restore rd
-addi sp, sp, 16
+addi sp, sp, 24
 .endm
 
 .macro MYSLTIU rd, r1, imm
