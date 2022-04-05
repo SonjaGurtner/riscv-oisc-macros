@@ -106,7 +106,7 @@ beq x0, x0, 31f
 30:
 lw t0, 8(sp)
 lw t1, 12(sp)
-MYSLLI_SAFE t0, t0, 1            #eliminate MSB
+MYSLLI_SAFE t0, t0, 1       #eliminate MSB
 srli t0, t0, 1
 MYSLLI_SAFE t1, t1, 1
 srli t1, t1, 1
@@ -272,6 +272,7 @@ addi sp, sp, 16
 .endm
 
 .macro MYSLL rd, r1, r2
+#shift uses only the lower 5 bit as shift amount, extract via and 31
 addi sp, sp, -20
 sw t0, 0(sp)
 sw t1, 4(sp)
@@ -289,9 +290,8 @@ addi sp, sp, 20
 .endm
 
 .macro MYSLLI_SAFE rd, r1, imm
-# shift amount should be positive, negativ leads to infinite loop in this macro
-# and overflow or smth in real sll
 # shift by 1 means * 2 (=add to itself)
+#safe version for use in macro (does not need to extract lowest 5 bit first)
 addi sp, sp, -24
 sw t0, 0(sp)                #save registers
 sw t1, 4(sp)
@@ -302,7 +302,6 @@ sw \r1, 16(sp)
 lw t3, 16(sp)               #t3 = r1, will become rd
 sub t0, x0, t3              #t0 = -rd
 MYADDI t1, x0, \imm         #t1 = exit condition
-#andi t1, t1, 31
 MYADDI t2, x0, 0            #loop variable i
 
 60:
@@ -331,7 +330,6 @@ sw t3, 12(sp)               #t3 will become rd
 sw \r1, 16(sp)
 sw \r2, 20(sp)
 lw t1, 20(sp)               #t1=t2, loop boundary
-#andi t1, t1, 31
 MYADDI t2, x0, 0            #loop variable i
 lw t3, 16(sp)               #t3 = r1
 sub t0, x0, t3              #t0 = -rd
@@ -464,7 +462,7 @@ sub s1, x0, x0              #clean rd for result
 
 121:
 beq t1, t2, 126f            #i=33, loop limit reached, compared each bit
-MYSLLI_SAFE s1, s1, 1            #shift rd left by one
+MYSLLI_SAFE s1, s1, 1       #shift rd left by one
 MYSLLI_SAFE t5, t3, 1              
 srli t5, t5, 1              #MSB = 0
 MYSLLI_SAFE t6, t4, 1              
@@ -524,7 +522,7 @@ addi sp, sp, 44
 
 .macro MYAND rd, r1, r2
 #check special cases, BEFORE overwriting temp registers (one of them may be r1 or r2)
-beq \r1, x0, 147f          #r1 or r2 = 0, return 0
+beq \r1, x0, 147f           #r1 or r2 = 0, return 0
 beq \r2, x0, 147f
 
 addi sp, sp, -44
@@ -584,7 +582,7 @@ beq x0, x0, 141b            #loop again
 sub \rd, x0, x0             #return 0
 beq x0, x0, 149f
 
-146:                        #end, estore registers
+146:                        #end, restore registers
 sw s1, 40(sp)
 lw s1, 28(sp)
 lw t2, 24(sp)              
