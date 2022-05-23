@@ -379,13 +379,13 @@ sw \r1, 16(sp)
 lw t3, 16(sp)               #t3 = r1, will become rd
 sub t0, x0, t3              #t0 = -rd
 MYADDI t1, x0, \imm         #t1 = exit condition
-MYADDI t2, x0, 0            #loop variable i
+sub t2, x0, x0              #loop variable i
 
 140:
-beq t2, t1, 141f             #loop end condition
+beq t2, t1, 141f            #loop end condition
 sub t3, t3, t0              #rd - (-rd) => rd*2
 sub t0, x0, t3              #t0 = -rd
-addi t2, t2, 1              #i++
+MYADDI t2, t2, 1            #i++
 beq x0, x0, 140b
 
 141:
@@ -407,12 +407,12 @@ sw t3, 12(sp)               #t3 will become rd
 sw \r1, 16(sp)
 sw \r2, 20(sp)
 lw t1, 20(sp)               #t1=t2, loop boundary
-MYADDI t2, x0, 0            #loop variable i
+sub t2, x0, x0              #loop variable i
 lw t3, 16(sp)               #t3 = r1
 sub t0, x0, t3              #t0 = -rd
 
 150:
-beq t2, t1, 151f             #loop end condition
+beq t2, t1, 151f            #loop end condition
 sub t3, t3, t0              #rd - (-rd) => rd*2
 sub t0, x0, t3              #t0 = -rd
 MYADDI t2, t2, 1            #i++
