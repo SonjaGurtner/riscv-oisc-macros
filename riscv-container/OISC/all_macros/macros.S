@@ -129,7 +129,7 @@ MYSLLI_SAFE t0, t0, 1       #eliminate MSB
 MYSRLI_SAFE t0, t0, 1
 MYSLLI_SAFE t1, t1, 1
 MYSRLI_SAFE t1, t1, 1
-MYBGE t0, t1, 43f           #r2 < r1, jump to imm
+MYBGE t0, t1, 42f           #r2 < r1, jump to imm
 
 41:                         #just restore registers, do nothing
 lw t1, 4(sp)
