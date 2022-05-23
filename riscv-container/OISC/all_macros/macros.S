@@ -37,30 +37,14 @@ lw \rd, 16(sp)
 addi sp, sp, 20
 .endm
 
-.macro SUBI rd, r1, imm
-addi sp, sp, -20
-sw t0, 0(sp)
-sw t1, 4(sp)
-sw t2, 8(sp)                #will be rd
-sw \r1, 12(sp)
-lw t1, 12(sp)               #t1 = r1
-MYADDI t0, x0, \imm         #t0 = imm
-sub t2, t1, t0              #rd = r1 -(-imm)
-sw t2, 16(sp)
-lw t2, 8(sp)
-lw t1, 4(sp)
-lw t0, 0(sp)
-lw \rd, 16(sp)
-addi sp, sp, 20
-.endm
-
 #only replace JAL command as we need to keep jalr to manipulate pc directly
 .macro MYJAL, rd, imm
 addi sp, sp, -12
 sw t0, 0(sp)                #save t0
 sw t1, 4(sp)                #save t1, will become return value for rd
 auipc t1, 0                 #t1 = pc
-SUBI t0, x0, 4              #t0 = -4
+MYADDI t0, x0, 4            #t0 = 4
+sub t0, x0, t0              #t0 = -t0 (=-4)
 sub t1, t1, t0              #rd = pc + 4
 sw t1, 8(sp)
 lw t1, 4(sp)
@@ -151,7 +135,7 @@ MYBGE t0, t1, 43f           #r2 < r1, jump to imm
 lw t1, 4(sp)
 lw t0, 0(sp)
 addi sp, sp, 16
-beq x0, x0, 8f
+beq x0, x0, 43f
 
 42:
 lw t1, 4(sp)
@@ -974,6 +958,103 @@ sw   a6, 0(t6)
 str:      .ascii "Hello\n"
 
 _start:
+##
+MYSRL x8, x9, x19
+MYSRA x20, x16, x26
+MYSRA x29, x14, x13
+MYXORI x30, x24, 421
+MYXORI x28, x0, -522
+MYADDI x4, x19, -988
+MYSLT x23, x12, x27
+MYSLT x5, x19, x13
+MYSLLI x15, x26, 2
+lui x19, 434419
+MYBNE x28, x17, neLbl
+MYSLTI x30, x12, -11
+MYSRL x10, x10, x26
+MYADDI x1, x7, 1849
+MYSLT x14, x10, x21
+MYSLTIU x28, x19, 516
+MYANDI x3, x13, -886
+MYSLL x14, x25, x23
+MYSLTIU x13, x30, -1416
+lui x28, 305168
+MYADDI x23, x21, -1999
+MYSRL x22, x21, x27
+MYADD x17, x21, x9
+MYSRAI x24, x4, 29
+MYAND x9, x5, x29
+MYSRA x7, x19, x14
+MYBLTU x26, x14, ltuLbl
+MYSRA x16, x1, x0
+MYADD x1, x0, x30
+MYSRA x12, x17, x9
+MYSLLI x26, x3, 0
+MYSRLI x27, x19, 7
+MYBNE x11, x18, neLbl
+MYBGEU x20, x21, geuLbl
+MYBGEU x1, x30, geuLbl
+MYBNE x27, x16, neLbl
+MYAND x18, x16, x19
+MYSLTIU x14, x30, -383
+MYADDI x11, x17, 1528
+MYBLTU x1, x10, ltuLbl
+MYBNE x3, x12, neLbl
+jal x0, neLbl
+MYANDI x1, x7, 1562
+MYSLLI x15, x6, 21
+lui x4, 539374
+MYSLTI x13, x7, 526
+MYSLL x6, x19, x30
+MYSLTIU x20, x22, -1788
+MYADD x3, x13, x19
+MYSLL x19, x16, x18
+MYORI x8, x24, -1132
+MYSLLI x22, x15, 8
+MYXOR x27, x9, x11
+MYSRAI x18, x3, 2
+MYSLT x12, x3, x0
+MYORI x11, x11, 884
+MYSRL x14, x4, x17
+MYBGEU x12, x13, geuLbl
+MYSLTU x20, x11, x30
+MYSLTU x20, x13, x13
+MYXORI x10, x5, -1267
+MYBNE x29, x1, neLbl
+MYADD x30, x23, x7
+MYSLTIU x24, x1, 1334
+lui x26, 982727
+MYSLTIU x3, x3, -896
+MYSLTU x21, x21, x0
+MYSLTU x3, x22, x8
+MYAND x28, x26, x29
+MYXORI x27, x14, -932
+MYSRLI x3, x15, 23
+MYSRLI x3, x19, 27
+MYBGE x27, x4, geLbl
+MYSRA x14, x12, x19
+MYSRAI x5, x3, 20
+MYSRL x24, x19, x0
+MYBLTU x7, x21, ltuLbl
+jal x0, neLbl
+MYBNE x18, x23, neLbl
+MYAND x10, x17, x5
+MYSLTIU x9, x8, -669
+MYSRL x23, x28, x11
+jal x0, neLbl
+MYANDI x19, x28, 1414
+MYSRL x6, x13, x9
+jal x0, neLbl
+MYSLTIU x14, x21, -1943
+MYBGEU x26, x25, geuLbl
+MYBLTU x20, x3, ltuLbl
+MYSRA x25, x13, x11
+neLbl:
+geLbl:
+ltuLbl:
+geuLbl:
+SYS_EXIT 0
+###
 addi s2, x0, 0		    #fib1 = 0
 addi s3, x0, 1          #fib2 = 1
 addi a1, x0, 0          #return val
