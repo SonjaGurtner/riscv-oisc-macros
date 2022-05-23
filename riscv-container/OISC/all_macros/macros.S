@@ -258,7 +258,7 @@ sw \r1, 8(sp)
 lw t1, 8(sp)
 MYADDI t0, x0, \imm
 MYANDI t0, t0, 31
-beq x0, t0, 80f
+beq t0, x0, 80f
 MYSRL_SAFE \rd, t1, t0
 beq x0, x0, 81f
 80:
@@ -279,7 +279,7 @@ sw \r1, 8(sp)
 lw t1, 8(sp)
 MYADDI t0, x0, \imm
 MYANDI t0, t0, 31
-beq x0, t0, 90f
+beq t0, x0, 90f
 MYSRA_SAFE \rd, t1, t0
 beq x0, x0, 91f
 90:
@@ -300,7 +300,7 @@ sw \r1, 8(sp)
 lw t1, 8(sp)
 MYADDI t0, x0, \imm
 MYANDI t0, t0, 31
-beq x0, t0, 100f
+beq t0, x0, 100f
 MYSLL_SAFE \rd, t1, t0
 beq x0, x0, 101f
 100:
@@ -323,7 +323,7 @@ sw \r2, 12(sp)
 lw t1, 8(sp)
 lw t0, 12(sp)
 MYANDI t0, t0, 31
-beq x0, t0, 110f
+beq t0, x0, 110f
 MYSLL_SAFE \rd, t1, t0
 beq x0, x0, 111f
 110:
@@ -346,7 +346,7 @@ sw \r2, 12(sp)
 lw t1, 8(sp)
 lw t0, 12(sp)
 MYANDI t0, t0, 31
-beq x0, t0, 120f
+beq t0, x0, 120f
 MYSRL_SAFE \rd, t1, t0
 beq x0, x0, 121f
 120:
@@ -369,7 +369,7 @@ sw \r2, 12(sp)
 lw t1, 8(sp)
 lw t0, 12(sp)
 MYANDI t0, t0, 31
-beq x0, t0, 130f
+beq t0, x0, 130f
 MYSRA_SAFE \rd, t1, t0
 beq x0, x0, 131f
 130:
@@ -516,7 +516,7 @@ MYSLLI_SAFE t4, t4, 1
 MYSRLI_SAFE t4, t4, 1       #msb eliminated
 MYSLLI_SAFE t3, t3, 1
 sub t5, t0, t4              #t5 = msb
-beq t5, x0, 171f             #msb = 0, don't do anything
+beq t5, x0, 171f            #msb = 0, don't do anything
 MYADDI t3, t3, 1
 
 171:
@@ -558,10 +558,12 @@ MYSLLI_SAFE t4, t4, 1
 MYSRLI_SAFE t4, t4, 1       #msb eliminated
 sub t5, t0, t4
 lw t4, 24(sp)               #t4 = r1
+beq t5, x0, 180f            #if msb == 0, add 0
+MYADDI t5, x0, 1            #else add 1
 
 #first loop, copy msb
 180:
-beq t2, t1, 181f             #loop end condition
+beq t2, t1, 181f            #loop end condition
 MYSLLI_SAFE t3, t3, 1
 MYADD t3, t3, t5            #add msb to result
 MYADDI t2, t2, 1
@@ -579,8 +581,8 @@ beq t2, t1, 184f             #loop end condition
 MYSLLI_SAFE t4, t4, 1
 MYSRLI_SAFE t4, t4, 1       #msb eliminated
 MYSLLI_SAFE t3, t3, 1
-sub t5, t0, t4              #t5=msb
-beq t5, x0, 183f             #msb = 0, don't do anything
+sub t5, t0, t4              #t5 = msb
+beq t5, x0, 183f            #msb == 0, don't do anything
 MYADDI t3, t3, 1
 
 183:
@@ -621,10 +623,12 @@ MYSLLI_SAFE t4, t4, 1
 MYSRLI_SAFE t4, t4, 1       #msb eliminated
 sub t5, t0, t4              #msb
 lw t4, 24(sp)               #t4 = r1
+beq t5, x0, 190f            #if msb == 0, add 0
+MYADDI t5, x0, 1            #else add 1
 
 #first loop, copy msb
 190:
-beq t2, t1, 191f             #loop end condition
+beq t2, t1, 191f            #loop end condition
 MYSLLI_SAFE t3, t3, 1
 MYADD t3, t3, t5            #add msb to result
 MYADDI t2, t2, 1
@@ -692,9 +696,9 @@ sub s1, x0, x0              #clean s1 for result, will become value for rd
 beq t1, t2, 209f            #i=33, loop limit reached, compared each bit
 MYSLLI_SAFE s1, s1, 1       #shift rd left by one
 MYSLLI_SAFE t5, t3, 1              
-srli t5, t5, 1              #MSB = 0
+MYSRLI_SAFE t5, t5, 1       #MSB = 0
 MYSLLI_SAFE t6, t4, 1              
-srli t6, t6, 1              #MSB = 0
+MYSRLI_SAFE t6, t6, 1       #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
 MYBNE t5, x0, 203f
 201:
@@ -776,9 +780,9 @@ sub s1, x0, x0              #clean rd for result
 beq t1, t2, 309f            #i=33, loop limit reached, compared each bit
 MYSLLI_SAFE s1, s1, 1       #shift rd left by one
 MYSLLI_SAFE t5, t3, 1              
-srli t5, t5, 1              #MSB = 0
+MYSRLI_SAFE t5, t5, 1       #MSB = 0
 MYSLLI_SAFE t6, t4, 1              
-srli t6, t6, 1              #MSB = 0
+MYSRLI_SAFE t6, t6, 1       #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
 MYBNE t5, x0, 303f
 301:
@@ -859,9 +863,9 @@ sub s1, x0, x0              #clean rd for result
 beq t1, t2, 408f            #i=33, loop limit reached, compared each bit
 MYSLLI_SAFE s1, s1, 1       #shift rd left by one
 MYSLLI_SAFE t5, t3, 1              
-srli t5, t5, 1              #MSB = 0
+MYSRLI_SAFE t5, t5, 1       #MSB = 0
 MYSLLI_SAFE t6, t4, 1
-srli t6, t6, 1              #MSB = 0
+MYSRLI_SAFE t6, t6, 1       #MSB = 0
 sub t5, t3, t5              #t5 = t3 -t5 (extracted MSB)
 MYBNE t5, x0, 403f
 401:
