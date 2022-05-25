@@ -1,4 +1,4 @@
-# RISCV-OISC
+# RISC-V OISC Macros
 
 Master Thesis at the Institute of Complex Systems @JKU Linz [ICS](https://www.jku.at/institut-fuer-complex-systems/).
 
