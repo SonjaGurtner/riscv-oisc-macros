@@ -1,6 +1,6 @@
 # RISC-V OISC Macros
 
-Master Thesis at the Institute of Complex Systems @JKU Linz [ICS](https://www.jku.at/institut-fuer-complex-systems/).
+Master Thesis at the Institute of Complex Systems @JKU Linz [ICS](https://www.ics.jku.at/).
 
 This work takes the RISC-V RV32I Base Integer Instructions and replaces every instruction (with some exceptions like e.g. load/store) with just three RISC-V instructions: sub, blt and beq. Therefore it follows the principle of the OISC instruction SUBLEQ.
 The goal is that if an existing program gets replaced with the new instructions, executing both results in the same architectural states (i.e. the same register values).
