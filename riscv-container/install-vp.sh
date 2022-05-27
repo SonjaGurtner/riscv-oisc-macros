@@ -12,6 +12,6 @@ cmake ..
 make install
 cd ../../..
 
-export PATH=$PATH:/workspaces/RISCV-OISC/riscv-container/riscv-vp/vp/build/bin
+export PATH=$PATH:/workspaces/riscv-oisc-macros/riscv-container/riscv-vp/vp/build/bin
 
-echo "PATH=$PATH:/workspaces/RISCV-OISC/riscv-container/riscv-vp/vp/build/bin" >> ~/.bashrc
+echo "PATH=$PATH:/workspaces/riscv-oisc-macros/riscv-container/riscv-vp/vp/build/bin" >> ~/.bashrc

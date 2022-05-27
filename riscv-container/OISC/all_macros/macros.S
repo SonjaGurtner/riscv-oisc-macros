@@ -110,43 +110,10 @@ beq x0, x0, \imm            # jump to label
 .endm
 
 .macro MYBGEU r1, r2, imm
-addi sp, sp, -16
-sw t0, 0(sp)
-sw t1, 4(sp)
-sw \r1, 8(sp)
-sw \r2, 12(sp)
-lw t0, 8(sp)                # t0 = r1
-lw t1, 12(sp)               # t1 = r2
-# compare upper 31 bits
-MYSRLI_SAFE t0, t0, 1       # eliminate LSB, get leading 0
-MYSRLI_SAFE t1, t1, 1
-beq t0, t1, 40f             # upper 31 bits are the same
-MYBGE t0, t1, 42f           # compare upper 31 bits with greater equal
-beq x0, x0, 41f
+MYBLTU \r1, \r2, 40f
+beq x0, x0, \imm
 
-# upper 31 bits are the same, compare lower 31 bits
 40:
-lw t0, 8(sp)
-lw t1, 12(sp)
-MYSLLI_SAFE t0, t0, 1       # eliminate MSB
-MYSRLI_SAFE t0, t0, 1
-MYSLLI_SAFE t1, t1, 1
-MYSRLI_SAFE t1, t1, 1
-MYBGE t0, t1, 42f           # r1 > r2, jump to imm
-
-41:                         # just restore registers, do nothing
-lw t1, 4(sp)
-lw t0, 0(sp)
-addi sp, sp, 16
-beq x0, x0, 43f
-
-42:
-lw t1, 4(sp)
-lw t0, 0(sp)
-addi sp, sp, 16
-beq x0, x0, \imm            #jump to label
-
-43:
 .endm
 
 .macro MYSLT rd, r1, r2

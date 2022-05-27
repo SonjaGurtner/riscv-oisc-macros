@@ -1,0 +1,4 @@
+{
+    "makefile.extensionOutputFolder": "./.vscode",
+    "cmake.sourceDirectory": "${workspaceFolder}/riscv-tiny-rv32i/isa/lib"
+}
