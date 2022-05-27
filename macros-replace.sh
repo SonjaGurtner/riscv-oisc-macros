@@ -7,25 +7,25 @@ filename=$(basename "${MYFILE}")
 #copy file and replace all instructions with the macro names, order of instructios matters
 cp ${MYFILE} temp.S
 sed -i \
--e "s/\<addi\>/MYADDI/Ig" \
--e "s/\<add\>/MYADD/Ig" \
--e "s/\<ori\>/MYORI/Ig" \
--e "s/\<or\>/MYOR/Ig" \
--e "s/\<xori\>/MYXORI/Ig" \
--e "s/\<xor\>/MYXOR/Ig" \
--e "s/\<andi\>/MYANDI/Ig" \
--e "s/\<and\>/MYAND/Ig" \
--e "s/\<bgeu\>/MYBGEU/Ig" \
--e "s/\<bge\>/MYBGE/Ig" \
--e "s/\<bne\>/MYBNE/Ig" \
--e "s/\<bltu\>/MYBLTU/Ig" \
--e "s/\<sltiu\>/MYSLTIU/Ig" \
--e "s/\<slti\>/MYSLTI/Ig" \
--e "s/\<sltu\>/MYSLTU/Ig" \
--e "s/\<slt\>/MYSLT/Ig" \
--e "s/\<slli\>/MYSLLI/Ig" \
--e "s/\<sll\>/MYSLL/Ig" \
--e "s/\<jal\>/MYJAL/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<addi\>/MYADDI/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<add\>/MYADD/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<ori\>/MYORI/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<or\>/MYOR/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<xori\>/MYXORI/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<xor\>/MYXOR/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<andi\>/MYANDI/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<and\>/MYAND/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<bgeu\>/MYBGEU/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<bge\>/MYBGE/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<bne\>/MYBNE/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<bltu\>/MYBLTU/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<sltiu\>/MYSLTIU/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<slti\>/MYSLTI/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<sltu\>/MYSLTU/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<slt\>/MYSLT/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<slli\>/MYSLLI/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<sll\>/MYSLL/Ig" \
+-e "/[sS][pP]/b; /[xX]2/b; s/\<jal\>/MYJAL/Ig" \
 temp.S
 
 #copy new instruction macros and replaced program into new file
