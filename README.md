@@ -7,3 +7,5 @@ The goal is that if an existing program gets replaced with the new instructions,
 
 This repository contains the new instruction macros, which were first fuzzed with a small handwritten [Fuzzer](https://github.com/SonjaGurtner/riscv-oisc-fuzzer) in Java.
 The second part of the Thesis was to formally verify their correctness by writing an Interpretor in [Rosette](https://github.com/SonjaGurtner/riscv-oisc-verifier) which proves the equivalence of the RISC-V instructions and the new instructions (i.e. the architectural state of register values and the stack after executing two programs) with a SMT Solver.
+
+The script macros-replace.sh can be used to replace the RISC-V instruction names in an existing assembly file with the new macro names (addi x3, x0, 3 -> MYADDI x3. x0. 3). The second script macros-copy.sh can then copy the macro definitions into the file with the replaced instructions.
