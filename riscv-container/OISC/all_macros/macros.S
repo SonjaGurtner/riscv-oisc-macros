@@ -25,8 +25,6 @@ addi sp, sp, -16
 sw t0, 0(sp)
 sw t1, 4(sp)
 sw t2, 8(sp)
-#sw \r1, 12(sp)
-#lw t1, 12(sp)               # t1 = r1
 sub t1, x0, \r1             # t1 = -r1
 sub t1, x0, t1              #t1 = r1
 addi t0, x0, \imm           # t0 = imm
