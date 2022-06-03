@@ -9,7 +9,7 @@ sw t2, 8(sp)
 sw \r1, 12(sp)
 sw \r2, 16(sp)
 lw t1, 12(sp)               # t1 = r1
-lw t0, 16(sp)               # ts = r2
+lw t0, 16(sp)               # t0 = r2
 sub t0, x0, t0              # t0 = -r2
 sub t2, t1, t0              # rd = r1-(-r2) = r1 + r2
 sw t2, 16(sp)
@@ -26,7 +26,7 @@ sw t0, 0(sp)
 sw t1, 4(sp)
 sw t2, 8(sp)
 sub t1, x0, \r1             # t1 = -r1
-sub t1, x0, t1              #t1 = r1
+sub t1, x0, t1              # t1 = r1
 addi t0, x0, \imm           # t0 = imm
 sub t0, x0, t0              # t0 = -imm
 sub t2, t1, t0              # rd = r1-(-imm)
@@ -429,8 +429,6 @@ sub t2, x0, x0              #clear loop variable
 lw t0, 24(sp)               # t0 = r1
 sub t3, x0, x0              # clear rd
 lw t4, 24(sp)               # t4 = r1
-MYSLLI_SAFE t4, t4, 1
-srli t4, t4, 1              # msb eliminated
 
 160:
 beq t2, t1, 162f            # loop end condition
