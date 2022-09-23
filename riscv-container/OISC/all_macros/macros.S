@@ -807,7 +807,7 @@ sw t3, 0(sp)                # shifting r1
 sw t4, 4(sp)                # shifting r2
 sw t5, 8(sp)                # msb eliminated r1 for comparison, also contains MSB sum
 sw t6, 12(sp)               # msb eliminated r2 for comparison
-sw t0, 16(sp)               # 1, for comparing MSBs
+sw t0, 16(sp)               # 2, for comparing MSBs
 sw t1, 20(sp)               # loop variable i
 sw t2, 24(sp)               # loop limit = 32   
 sw s1, 28(sp)               # will be value for rd     
