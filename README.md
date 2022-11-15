@@ -1,4 +1,5 @@
-# RISC-V OISC Macros
+# A Formally Verified Reduction of the RV32I ISA
+## RISC-V Macros
 
 Master Thesis at the Institute for Complex Systems @JKU Linz ([ICS](https://www.ics.jku.at/), [GitHub](https://github.com/ics-jku)).
 
